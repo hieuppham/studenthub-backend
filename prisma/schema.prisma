@@ -7,154 +7,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model answer_comment {
-  id                                            Int      @id @default(autoincrement())
-  answer_id                                     Int
-  user_id                                       String   @db.VarChar(50)
-  content                                       String   @db.Text
-  user_display_name                             String   @db.VarChar(255)
-  created_at                                    DateTime @default(now()) @db.DateTime(0)
-  answers                                       answers  @relation(fields: [answer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "answer_comment_fk0")
-  users_answer_comment_user_display_nameTousers users    @relation("answer_comment_user_display_nameTousers", fields: [user_display_name], references: [display_name], onDelete: NoAction, onUpdate: NoAction, map: "answer_comment_fk2")
-  users_answer_comment_user_idTousers           users    @relation("answer_comment_user_idTousers", fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "answer_comment_fk1")
+model AnswerComment {
+  id        Int      @id @default(autoincrement())
+  answerId  Int
+  userId    String   @db.Text
+  content   String   @db.Text
+  createdAt DateTime @db.DateTime(0)
+  updatedAt DateTime @db.DateTime(0)
+  Answer    Answer   @relation(fields: [answerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "AnswerComment_fk0")
 
-  @@index([answer_id], map: "answer_comment_fk0")
-  @@index([user_id], map: "answer_comment_fk1")
-  @@index([user_display_name], map: "answer_comment_fk2")
+  @@index([answerId], map: "AnswerComment_fk0")
 }
 
-model answer_voters {
-  id        Int     @id @default(autoincrement())
-  user_id   String  @db.VarChar(50)
-  answer_id Int
-  state     Int     @default(0)
-  answers   answers @relation(fields: [answer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "answer_voters_fk1")
-  users     users   @relation(fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "answer_voters_fk0")
+model AnswerVoter {
+  id       Int    @id @default(autoincrement())
+  userId   String @db.VarChar(255)
+  answerId Int
+  state    Int
+  Answer   Answer @relation(fields: [answerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "AnswerVoter_fk1")
+  User     User   @relation(fields: [userId], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "AnswerVoter_fk0")
 
-  @@index([user_id], map: "answer_voters_fk0")
-  @@index([answer_id], map: "answer_voters_fk1")
+  @@index([userId], map: "AnswerVoter_fk0")
+  @@index([answerId], map: "AnswerVoter_fk1")
 }
 
-model answers {
-  id                                     Int              @id @default(autoincrement())
-  question_id                            Int
-  user_id                                String           @db.VarChar(50)
-  user_display_name                      String           @db.VarChar(255)
-  content                                String           @db.Text
-  score                                  Int              @default(0)
-  verifiy                                Boolean          @default(false)
-  created_time                           DateTime         @default(now()) @db.DateTime(0)
-  updated_time                           DateTime         @default(now()) @db.DateTime(0)
-  questions                              questions        @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "answers_fk0")
-  users_answers_user_display_nameTousers users            @relation("answers_user_display_nameTousers", fields: [user_display_name], references: [display_name], onDelete: NoAction, onUpdate: NoAction, map: "answers_fk2")
-  users_answers_user_idTousers           users            @relation("answers_user_idTousers", fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "answers_fk1")
-  answer_comment                         answer_comment[]
-  answer_voters                          answer_voters[]
+model Answer {
+  id            Int             @id @default(autoincrement())
+  questionId    Int
+  userId        String          @db.VarChar(255)
+  content       String          @db.Text
+  score         Int
+  verifiy       Boolean
+  createdAt     DateTime        @db.DateTime(0)
+  updatedAt     DateTime        @db.DateTime(0)
+  Question      Question        @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "Answer_fk0")
+  User          User            @relation(fields: [userId], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "Answer_fk1")
+  AnswerComment AnswerComment[]
+  AnswerVoter   AnswerVoter[]
 
-  @@index([question_id], map: "answers_fk0")
-  @@index([user_id], map: "answers_fk1")
-  @@index([user_display_name], map: "answers_fk2")
+  @@index([questionId], map: "Answer_fk0")
+  @@index([userId], map: "Answer_fk1")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model interested_tag {
-  tag_id  Int
-  user_id String @db.VarChar(50)
-  tag     tag    @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "interested_tag_fk0")
-  users   users  @relation(fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "interested_tag_fk1")
+model QuestionComment {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  userId     String   @db.Text
+  content    String   @db.Text
+  createdAt  DateTime @db.DateTime(0)
+  updatedAt  DateTime @db.DateTime(0)
+  Question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "QuestionComment_fk0")
 
-  @@index([tag_id], map: "interested_tag_fk0")
-  @@index([user_id], map: "interested_tag_fk1")
-  @@ignore
+  @@index([questionId], map: "QuestionComment_fk0")
 }
 
-model question_comment {
-  id                                              Int       @id @default(autoincrement())
-  question_id                                     Int
-  user_id                                         String    @db.VarChar(50)
-  content                                         String    @db.Text
-  user_display_name                               String    @db.VarChar(255)
-  created_at                                      DateTime  @default(now()) @db.DateTime(0)
-  questions                                       questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "question_comment_fk0")
-  users_question_comment_user_display_nameTousers users     @relation("question_comment_user_display_nameTousers", fields: [user_display_name], references: [display_name], onDelete: NoAction, onUpdate: NoAction, map: "question_comment_fk2")
-  users_question_comment_user_idTousers           users     @relation("question_comment_user_idTousers", fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "question_comment_fk1")
+model QuestionVoter {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  userId     String   @db.VarChar(255)
+  state      Int
+  Question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "QuestionVoter_fk0")
+  User       User     @relation(fields: [userId], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "QuestionVoter_fk1")
 
-  @@index([question_id], map: "question_comment_fk0")
-  @@index([user_id], map: "question_comment_fk1")
-  @@index([user_display_name], map: "question_comment_fk2")
+  @@index([questionId], map: "QuestionVoter_fk0")
+  @@index([userId], map: "QuestionVoter_fk1")
 }
 
-/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
-model question_tag {
-  question_id Int
-  tag_id      Int
-  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "question_tag_fk0")
-  tag         tag       @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "question_tag_fk1")
+model Question {
+  id              Int               @id @default(autoincrement())
+  userId          String            @db.VarChar(255)
+  title           String            @db.Text
+  content         String            @db.Text
+  score           Int
+  createdAt       DateTime          @db.DateTime(0)
+  updatedAt       DateTime          @db.DateTime(0)
+  User            User              @relation(fields: [userId], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "Question_fk0")
+  Answer          Answer[]
+  QuestionComment QuestionComment[]
+  QuestionVoter   QuestionVoter[]
+  TagsOnQuestions TagsOnQuestions[]
 
-  @@index([question_id], map: "question_tag_fk0")
-  @@index([tag_id], map: "question_tag_fk1")
-  @@ignore
+  @@index([userId], map: "Question_fk0")
 }
 
-model question_voters {
-  id          Int       @id @default(autoincrement())
-  question_id Int
-  user_id     String    @db.VarChar(50)
-  state       Int       @default(0)
-  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "question_voters_fk0")
-  users       users     @relation(fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "question_voters_fk1")
-
-  @@index([question_id], map: "question_voters_fk0")
-  @@index([user_id], map: "question_voters_fk1")
+model Tag {
+  id              Int               @id @default(autoincrement())
+  name            String            @unique(map: "name") @db.VarChar(255)
+  TagsOnQuestions TagsOnQuestions[]
+  TagsOnUsers     TagsOnUsers[]
 }
 
-model questions {
-  id                                       Int                @id @default(autoincrement())
-  user_id                                  String             @db.VarChar(50)
-  user_display_name                        String             @db.VarChar(255)
-  title                                    String             @db.Text
-  tags                                     String
-  content                                  String             @db.Text
-  score                                    Int                @default(0)
-  created_time                             DateTime           @default(now()) @db.DateTime(0)
-  updated_time                             DateTime           @default(now()) @db.DateTime(0)
-  users_questions_user_display_nameTousers users              @relation("questions_user_display_nameTousers", fields: [user_display_name], references: [display_name], onDelete: NoAction, onUpdate: NoAction, map: "questions_fk1")
-  users_questions_user_idTousers           users              @relation("questions_user_idTousers", fields: [user_id], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "questions_fk0")
-  answers                                  answers[]
-  question_comment                         question_comment[]
-  question_tag                             question_tag[]     @ignore
-  question_voters                          question_voters[]
-
-  @@index([user_id], map: "questions_fk0")
-  @@index([user_display_name], map: "questions_fk1")
+model User {
+  uid           String          @id @db.VarChar(255)
+  reputation    Int
+  description   String?         @db.Text
+  joiningDate   DateTime        @db.Date
+  displayName   String          @db.Text
+  photoURL      String?         @db.Text
+  phoneNumber   String?         @db.VarChar(20)
+  email         String          @unique(map: "email") @db.VarChar(255)
+  Answer        Answer[]
+  AnswerVoter   AnswerVoter[]
+  Question      Question[]
+  QuestionVoter QuestionVoter[]
+  InterestedTag TagsOnUsers[]
 }
 
-model tag {
-  id             Int              @id @default(autoincrement())
-  name           String           @unique(map: "name") @db.VarChar(255)
-  interested_tag interested_tag[] @ignore
-  question_tag   question_tag[]   @ignore
+model Document {
+  id    Int    @id @default(autoincrement())
+  title String @db.Text
+  url   String @db.Text
 }
 
-model users {
-  uid                                                        String             @id @db.VarChar(50)
-  reputation                                                 Int                @default(0)
-  description                                                String?            @db.Text
-  joining_date                                               DateTime           @default(dbgenerated("(curdate())")) @db.Date
-  display_name                                               String             @unique(map: "display_name") @db.VarChar(255)
-  interested_tags                                            String
-  photo_url                                                  String?            @db.Text
-  phone_number                                               String?            @db.VarChar(11)
-  email                                                      String             @unique(map: "email") @db.VarChar(255)
-  answer_comment_answer_comment_user_display_nameTousers     answer_comment[]   @relation("answer_comment_user_display_nameTousers")
-  answer_comment_answer_comment_user_idTousers               answer_comment[]   @relation("answer_comment_user_idTousers")
-  answer_voters                                              answer_voters[]
-  answers_answers_user_display_nameTousers                   answers[]          @relation("answers_user_display_nameTousers")
-  answers_answers_user_idTousers                             answers[]          @relation("answers_user_idTousers")
-  interested_tag                                             interested_tag[]   @ignore
-  question_comment_question_comment_user_display_nameTousers question_comment[] @relation("question_comment_user_display_nameTousers")
-  question_comment_question_comment_user_idTousers           question_comment[] @relation("question_comment_user_idTousers")
-  question_voters                                            question_voters[]
-  questions_questions_user_display_nameTousers               questions[]        @relation("questions_user_display_nameTousers")
-  questions_questions_user_idTousers                         questions[]        @relation("questions_user_idTousers")
+model TagsOnQuestions {
+  questionId Int
+  tagId      Int
+  Question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "TagsOnQuestions_fk0")
+  Tag        Tag      @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "TagsOnQuestions_fk1")
+
+  @@id([questionId, tagId])
+  @@index([tagId], map: "TagsOnQuestions_fk1")
+}
+
+model TagsOnUsers {
+  tagId  Int
+  userId String @db.VarChar(255)
+  Tag    Tag    @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "TagsOnUsers_fk0")
+  User   User   @relation(fields: [userId], references: [uid], onDelete: NoAction, onUpdate: NoAction, map: "TagsOnUsers_fk1")
+
+  @@id([tagId, userId])
+  @@index([userId], map: "TagsOnUsers_fk1")
 }
