@@ -1,0 +1,20 @@
+{
+  "name": "studenthub-backend",
+  "version": "0.1.0",
+  "description": "StudentHub backend code",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js"
+  },
+  "author": "Group 2 Web Technologies",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^3.10.0",
+    "express": "^4.17.3",
+    "mysql2": "^2.3.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "swagger-ui-express": "^4.3.0"
+  }
+}
