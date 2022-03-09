@@ -1,8 +1,8 @@
 const express = require('express')
 const app = express()
 
-const user = require('./src/routes/user.route')
-const question = require("./src/routes/question.route")
+const user = require('./src/user/user.route')
+const question = require("./src/question/question.route")
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
