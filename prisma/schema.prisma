@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -92,6 +93,7 @@ model Question {
   TagsOnQuestions TagsOnQuestions[]
 
   @@index([userId], map: "Question_fk0")
+  @@fulltext([title, content])
 }
 
 model Tag {
@@ -117,6 +119,8 @@ model User {
   QuestionComment QuestionComment[]
   QuestionVoter   QuestionVoter[]
   InterestedTag   TagsOnUsers[]
+
+  @@fulltext([displayName, email])
 }
 
 model Document {
@@ -128,7 +132,7 @@ model Document {
 model TagsOnQuestions {
   questionId Int
   tagId      Int
-  Question   Question @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "TagsOnQuestions_fk0")
+  Question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "TagsOnQuestions_fk0")
   Tag        Tag      @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "TagsOnQuestions_fk1")
 
   @@id([questionId, tagId])
