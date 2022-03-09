@@ -1,4 +1,4 @@
-
+--NOTE: The changes I made are just in my local database - hieuppham
 DROP DATABASE IF EXISTS student_hub;
 CREATE DATABASE student_hub;
 use student_hub;
