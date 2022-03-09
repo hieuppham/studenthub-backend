@@ -1,3 +1,4 @@
+
 DROP DATABASE IF EXISTS student_hub;
 CREATE DATABASE student_hub;
 use student_hub;
@@ -7,10 +8,11 @@ CREATE TABLE `User` (
 	`reputation` int NOT NULL DEFAULT 0,
 	`description` TEXT,
 	`joiningDate` DATE NOT NULL DEFAULT (CURRENT_DATE),
-	`displayName` TEXT NOT NULL ,
+	`displayName` VARCHAR(255) NOT NULL ,
 	`photoURL` TEXT,
 	`phoneNumber` varchar(20),
 	`email` varchar(255) NOT NULL UNIQUE,
+	FULLTEXT (`displayName`, `email`),
 	PRIMARY KEY (`uid`)
 );
 
@@ -18,11 +20,12 @@ DROP TABLE IF EXISTS `Question`;
 CREATE TABLE `Question` (
 	`id` int NOT NULL AUTO_INCREMENT,
 	`userId` varchar(255) NOT NULL,
-	`title` TEXT NOT NULL,
+	`title` VARCHAR(255) NOT NULL,
 	`content` TEXT NOT NULL,
 	`score` int NOT NULL DEFAULT 0,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	FULLTEXT (`title`, `content`),
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `Answer`;
@@ -128,3 +131,17 @@ ALTER TABLE `TagsOnQuestions` ADD CONSTRAINT `TagsOnQuestions_fk1` FOREIGN KEY (
 ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk0` FOREIGN KEY (`tagId`) REFERENCES `Tag`(`id`);
 
 ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+
+CREATE TRIGGER `update_qs_score_after_insert_qs_voter` AFTER INSERT ON `QuestionVoter`
+FOR EACH ROW 
+BEGIN
+	UPDATE `Question` 
+	SET `score` = (SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE id = NEW.`questionId`;
+END;
+
+CREATE TRIGGER `update_qs_score_after_update_qs_voter` AFTER UPDATE ON `QuestionVoter`
+FOR EACH ROW 
+BEGIN
+	UPDATE `Question` SET `score` = (
+		SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE id = NEW.`questionId`; 
+END;

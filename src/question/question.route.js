@@ -1,10 +1,18 @@
 const router = require('express').Router()
-const { addQuestion, findQuestions, findById, updateById, deleteById } = require("./question.controller")
+const { addQuestion, findQuestions, findQuestionById, updateQuestionById, deleteQuesionById } = require("./question.controller")
+const { updateQuestionScoreById } = require('./question-voter.controller')
+const { addComment, updateQuestionCommentById, deleteQuestionCommentById } = require("./question-comment.controller")
 
 router.post("/", addQuestion)
 router.get("/", findQuestions)
-router.get("/:id", findById)
-router.put("/:id", updateById)
-router.delete("/:id", deleteById)
+router.get("/:id", findQuestionById)
+router.put("/:id", updateQuestionById)
+router.delete("/:id", deleteQuesionById)
+
+router.put("/score/:id", updateQuestionScoreById)
+
+router.post("/comments", addComment)
+router.put("/comments/:id", updateQuestionCommentById)
+router.delete("/comments/:id", deleteQuestionCommentById)
 
 module.exports = router
