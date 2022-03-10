@@ -39,6 +39,12 @@ async function findQuestions(req, res) {
                             }
                         }
                     }
+                },
+                User: {
+                    select: {
+                        uid: true,
+                        displayName: true
+                    }
                 }
             },
             where: {
@@ -77,15 +83,30 @@ async function findQuestionById(req, res) {
             include: {
                 User: true,
                 Answer: {
-                    select: {
-                        AnswerComment: true,
-                        AnswerVoter: true
+                    include: {
+                        AnswerComment: {
+                            include: {
+                                User: {
+                                    select: {
+                                        uid: true,
+                                        displayName: true
+                                    }
+                                }
+                            }
+                        },
+                        AnswerVoter: {
+                            select: {
+                                userId: true,
+                                state: true
+                            }
+                        }
                     }
                 },
                 QuestionComment: {
                     include: {
                         User: {
                             select: {
+                                uid: true,
                                 displayName: true
                             }
                         },
@@ -150,7 +171,7 @@ async function deleteQuesionById(req, res) {
                 id: id
             }
         })
-        const result = question ? { message: 'ok' } : null
+        const result = { message: question ? `Deleted question ${question.id}` : "fail" }
         res.send(result)
     } catch (error) {
         res.status(500).send(error.message)
