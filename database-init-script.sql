@@ -1,7 +1,7 @@
 --NOTE: The changes I made are just in my local database - hieuppham
-DROP DATABASE IF EXISTS student_hub;
-CREATE DATABASE student_hub;
-use student_hub;
+DROP DATABASE IF EXISTS `student_hub`;
+CREATE DATABASE `student_hub`;
+use `student_hub`;
 DROP TABLE IF EXISTS `User`;
 CREATE TABLE `User` (
 	`uid` varchar(255) NOT NULL,
@@ -29,13 +29,14 @@ CREATE TABLE `Question` (
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `Answer`;
+
 CREATE TABLE `Answer` (
 	`id` int NOT NULL AUTO_INCREMENT,
 	`questionId` int NOT NULL,
 	`userId` varchar(255) NOT NULL,
 	`content` TEXT NOT NULL,
 	`score` int NOT NULL DEFAULT 0,
-	`verifiy` BOOLEAN NOT NULL DEFAULT FALSE,
+	`verify` BOOLEAN NOT NULL DEFAULT FALSE,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
@@ -102,29 +103,28 @@ CREATE TABLE `Document` (
 	PRIMARY KEY (`id`)
 );
 
-ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
-ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`);
+ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
-ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
-ALTER TABLE `QuestionVoter` DROP CONSTRAINT `QuestionVoter_fk0`;
+ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+
 ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
-ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
-ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
-ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk1` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`);
+ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk1` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
 
-ALTER TABLE `QuestionComment` DROP CONSTRAINT `QuestionComment_fk0`;
 ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
-ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
-ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk0` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`);
+ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk0` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
 
-ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
 ALTER TABLE `TagsOnQuestions` ADD CONSTRAINT `TagsOnQuestions_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
@@ -132,18 +132,144 @@ ALTER TABLE `TagsOnQuestions` ADD CONSTRAINT `TagsOnQuestions_fk1` FOREIGN KEY (
 
 ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk0` FOREIGN KEY (`tagId`) REFERENCES `Tag`(`id`);
 
-ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+SELECT Concat('DROP TRIGGER ', Trigger_Name, ';') FROM  information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'student_hub';
 
-CREATE TRIGGER `update_qs_score_after_insert_qs_voter` AFTER INSERT ON `QuestionVoter`
+DROP TRIGGER update_qs_score_and_reputation_after_insert_qs_voter;
+
+DROP TRIGGER update_qs_score_and_reputation_after_update_qs_voter;
+
+DROP TRIGGER update_qs_score_and_reputation_after_delete_qs_voter;
+
+DROP TRIGGER update_ans_score_and_reputation_after_insert_ans_voter;
+
+DROP TRIGGER update_ans_score_and_reputation_after_update_ans_voter;
+
+DROP TRIGGER update_ans_score_and_reputation_after_delete_ans_voter;
+
+---- TRIGGER ON `QuestionVoter`
+CREATE TRIGGER `update_qs_score_and_reputation_after_insert_qs_voter` AFTER INSERT ON `QuestionVoter`
 FOR EACH ROW 
 BEGIN
 	UPDATE `Question` 
-	SET `score` = (SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE id = NEW.`questionId`;
+	SET `score` = (SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE `id` = NEW.`questionId`;
+
+	IF NEW.`state` = 1 THEN 
+		UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
+			SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+		);
+	ELSEIF NEW.`state` = -1 THEN
+		UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+			SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+		);
+	END IF;	
 END;
 
-CREATE TRIGGER `update_qs_score_after_update_qs_voter` AFTER UPDATE ON `QuestionVoter`
+CREATE TRIGGER `update_qs_score_and_reputation_after_update_qs_voter` AFTER UPDATE ON `QuestionVoter`
 FOR EACH ROW 
 BEGIN
 	UPDATE `Question` SET `score` = (
-		SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE id = NEW.`questionId`; 
+		SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE `id` = NEW.`questionId`; 
+
+	IF NEW.`state` = 1 THEN 
+		UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
+			SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+		);
+	ELSEIF NEW.`state` = -1 THEN
+		UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+			SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+		);
+	END IF;	
 END;
+
+CREATE TRIGGER `update_qs_score_and_reputation_after_delete_qs_voter` AFTER DELETE ON `QuestionVoter`
+FOR EACH ROW 
+BEGIN
+	UPDATE `Question` SET `score` = (
+		SELECT SUM(`score`) FROM `QuestionVoter` WHERE `questionId` = OLD.`questionId`
+		) WHERE `id` = OLD.`questionId`;
+
+	IF OLD.`state` = 1 THEN 
+		UPDATE `User` SET `reputation` = `reputation` - 10 WHERE `uid` = (
+			SELECT `userId` FROM `Question` WHERE `id` = OLD.`questionId`
+		);
+	ELSEIF OLD.`state` = -1 THEN
+		UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+			SELECT `userId` FROM `Question` WHERE `id` = OLD.`questionId`
+		);
+	END IF;	
+END;
+---- END TRIGGER ON `QuestionVoter`
+
+---- TRIGGER ON `AnswerVoter`
+CREATE TRIGGER  `update_ans_score_and_reputation_after_insert_ans_voter` AFTER INSERT ON `AnswerVoter`
+FOR EACH ROW
+BEGIN 
+	UPDATE `Answer` SET `score` = (
+		SELECT SUM(`state`) FROM `AnswerVoter` WHERE `answerId` = NEW.`answerId`
+		) WHERE `id` = NEW.`answerId`;
+	
+	IF NEW.`state` = 1 THEN 
+		UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
+			SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+		);
+	ELSEIF NEW.`state` = -1 THEN
+		UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+			SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+		);
+	END IF;	
+END;
+
+CREATE TRIGGER  `update_ans_score_and_reputation_after_update_ans_voter` AFTER UPDATE ON `AnswerVoter`
+FOR EACH ROW
+BEGIN 
+	UPDATE `Answer` SET `score` = (
+		SELECT SUM(`state`) FROM `AnswerVoter` WHERE `answerId` = NEW.`answerId`) WHERE `id` = NEW.`answerId`;
+
+	IF NEW.`state` = 1 THEN 
+		UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
+			SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+		);
+	ELSEIF NEW.`state` = -1 THEN
+		BEGIN
+			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+				SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+			);
+
+			UPDATE `User` SET `reputation` = `reputation` -1 WHERE `uid` = NEW.`userId`;
+		END;
+	END IF;	
+END;
+
+CREATE TRIGGER  `update_ans_score_and_reputation_after_delete_ans_voter` AFTER DELETE ON `AnswerVoter`
+FOR EACH ROW
+BEGIN 
+	UPDATE `Answer` SET `score` = (
+		SELECT SUM(`state`) FROM `AnswerVoter` WHERE `answerId` = OLD.`answerId`) WHERE `id` = OLD.`answerId`;
+
+	IF OLD.`state` = 1 THEN 
+		UPDATE `User` SET `reputation` = `reputation` - 10 WHERE `uid` = (
+			SELECT `userId` FROM `Answer` WHERE `id` = OLD.`answerId`
+		);
+	ELSEIF OLD.`state` = -1 THEN
+		UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+			SELECT `userId` FROM `Answer` WHERE `id` = OLD.`answerId`
+		);
+	END IF;	
+END;
+---- END TRIGGER ON `AnswerVoter`
+
+---- TRIGGER ON `Answer`
+CREATE TRIGGER `update_reputation_after_verify_answer` AFTER UPDATE ON `Answer`
+FOR EACH ROW
+BEGIN
+	IF NEW.`verify` = TRUE THEN
+		BEGIN
+			UPDATE `User` SET `reputation` = `reputation` + 15 WHERE `uid` = NEW.`userId`;
+			UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
+			);
+		END;
+	END IF;
+END;  
+---- END TRIGGER ON `Answer`

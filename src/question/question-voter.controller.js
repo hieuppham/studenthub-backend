@@ -7,8 +7,9 @@ async function updateQuestionScoreById(req, res) {
     try {
         const questionId = Number(req.params.id)
         const userId = req.body.userId
-        const question = await prisma.questionVoter.findFirst({ where: { userId: userId, questionId: questionId } })
+        const state = req.body.state
 
+        const question = await prisma.questionVoter.findFirst({ where: { userId: userId, questionId: questionId } })
         const questionVoterId = question ? question.id : -1
 
         const questionVoter = await prisma.questionVoter.upsert({
@@ -18,18 +19,10 @@ async function updateQuestionScoreById(req, res) {
             create: {
                 userId: userId,
                 questionId: questionId,
-                state: req.body.state
+                state: state
             },
             update: {
-                state: req.body.state
-            },
-            include: {
-                Question: {
-                    select: {
-                        score: true,
-                        id: true
-                    }
-                }
+                state: state
             }
         })
 

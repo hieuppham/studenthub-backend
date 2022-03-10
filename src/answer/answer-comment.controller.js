@@ -1,13 +1,13 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-module.exports = { addQuestionComment, updateQuestionCommentById, deleteQuestionCommentById }
+module.exports = { addAnswerComment, updateAnswerCommentById, deleteAnswerCommentById }
 
-async function addQuestionComment(req, res) {
+async function addAnswerComment(req, res) {
     try {
-        const comment = await prisma.questionComment.create({
+        const comment = await prisma.answerComment.create({
             data: {
-                questionId: req.body.questionId,
+                answerId: req.body.answerId,
                 userId: req.body.userId,
                 content: req.body.content
             }
@@ -18,9 +18,9 @@ async function addQuestionComment(req, res) {
     }
 }
 
-async function updateQuestionCommentById(req, res) {
+async function updateAnswerCommentById(req, res) {
     try {
-        const comment = await prisma.questionComment.update({
+        const comment = await prisma.answerComment.update({
             where: {
                 id: Number(req.params.id)
             },
@@ -28,21 +28,20 @@ async function updateQuestionCommentById(req, res) {
                 content: req.body.content
             }
         })
-
         res.send(comment)
     } catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-async function deleteQuestionCommentById(req, res) {
+async function deleteAnswerCommentById(req, res) {
     try {
-        const question = await prisma.questionComment.delete({
+        const comment = await prisma.answerComment.delete({
             where: {
                 id: Number(req.params.id)
             }
         })
-        const result = { message: question ? `Deleted commnent ${req.params.id} of question ${question.id}` : "fail" }
+        const result = { message: comment ? `Deleted comment ${req.params.id} of answer ${comment.answerId}` : "fail" }
         res.send(result)
     } catch (error) {
         res.status(500).send(error.message)
