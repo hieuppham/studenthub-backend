@@ -43,22 +43,36 @@ async function findQuestions(req, res) {
                 User: {
                     select: {
                         uid: true,
-                        displayName: true
+                        displayName: true,
+                        reputation: true
+                    }
+                },
+                _count: {
+                    select: {
+                        Answer: true
                     }
                 }
             },
             where: {
-                title: {
-                    search: what
-                },
-                content: {
-                    search: what
-                },
-                TagsOnQuestions: {
-                    some: {
-                        Tag: tags
+                AND: [{
+                        deleted: false
+                    },
+                    {
+                        title: {
+                            search: what
+                        },
+                        content: {
+                            search: what
+                        },
+                        TagsOnQuestions: {
+                            some: {
+                                Tag: tags
+                            }
+                        }
+
                     }
-                }
+                ]
+
             },
             orderBy: {
                 //use only one argument
@@ -76,9 +90,10 @@ async function findQuestions(req, res) {
 async function findQuestionById(req, res) {
     try {
         const id = Number(req.params.id)
-        const question = await prisma.question.findUnique({
+        const question = await prisma.question.findMany({
             where: {
-                id: id
+                id: id,
+                deleted: false
             },
             include: {
                 User: true,
@@ -92,7 +107,7 @@ async function findQuestionById(req, res) {
                                         displayName: true
                                     }
                                 }
-                            }
+                            },
                         },
                         AnswerVoter: {
                             select: {
@@ -100,6 +115,9 @@ async function findQuestionById(req, res) {
                                 state: true
                             }
                         }
+                    },
+                    where: {
+                        deleted: false
                     }
                 },
                 QuestionComment: {
@@ -166,13 +184,15 @@ async function updateQuestionById(req, res) {
 async function deleteQuesionById(req, res) {
     try {
         const id = Number(req.params.id)
-        const question = await prisma.question.delete({
+        const question = await prisma.question.update({
             where: {
                 id: id
+            },
+            data: {
+                deleted: true
             }
         })
-        const result = { message: question ? `Deleted question ${question.id}` : "fail" }
-        res.send(result)
+        res.send(question)
     } catch (error) {
         res.status(500).send(error.message)
     }

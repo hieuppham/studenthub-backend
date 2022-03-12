@@ -1,7 +1,8 @@
 const { PrismaClient } = require('@prisma/client')
+const { search } = require('./user.route')
 const prisma = new PrismaClient()
 
-module.exports = { addUser, findById, updateById, deleteById }
+module.exports = { addUser, findUsers, findById, updateById, deleteById }
 
 async function addUser(req, res) {
     try {
@@ -13,16 +14,16 @@ async function addUser(req, res) {
                 photoURL: req.body.photoURL,
                 phoneNumber: req.body.phoneNumber,
                 email: req.body.email,
-                // InterestedTag: {
-                //     create: {
-                //         userId: req.body.uid,
-                //         Tag: {
-                //             create: {
-                //                 name: req.body.tag
-                //             }
-                //         }
-                //     }
-                // }
+                InterestedTag: {
+                    create: {
+                        userId: req.body.uid,
+                        Tag: {
+                            create: {
+                                name: req.body.tag
+                            }
+                        }
+                    }
+                }
             }
         })
         res.status(201).send(user)
@@ -31,18 +32,33 @@ async function addUser(req, res) {
     }
 }
 
-// find by name, email and phone
-// async function findUsers(req, res) {
-//     try {
-//         const users = await prisma.user.findMany({
-//             where: {
-
-//             }
-//         })
-//     } catch (error) {
-//         res.status(500).send(error.message)
-//     }
-// }
+// find by name, email
+async function findUsers(req, res) {
+    try {
+        const what = req.query.what
+        const users = await prisma.user.findMany({
+            where: {
+                displayName: {
+                    search: what
+                },
+                email: {
+                    search: what
+                }
+            },
+            include: {
+                _count: {
+                    select: {
+                        Answer: true,
+                        Question: true
+                    }
+                }
+            }
+        })
+        res.send(users)
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
 
 async function findById(req, res) {
     try {

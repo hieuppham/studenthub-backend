@@ -36,9 +36,12 @@ async function updateAnswerById(req, res) {
 
 async function deleteAnswerById(req, res) {
     try {
-        const answer = await prisma.answer.delete({
+        const answer = await prisma.answer.update({
             where: {
                 id: Number(req.params.id)
+            },
+            data: {
+                deleted: true
             }
         })
 
