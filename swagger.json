@@ -1,0 +1,369 @@
+{
+    "openapi": "3.0.2",
+    "info": {
+        "title": "StudentHub API",
+        "version": "1.0"
+    },
+    "servers": [{
+        "url": "http://localhost:8080"
+    }],
+    "paths": {
+        "/api/users": {
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "created",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "uid": "4",
+                                    "reputation": 0,
+                                    "description": "My job is an engineer",
+                                    "joiningDate": "2022-03-11T00:00:00.000Z",
+                                    "displayName": "hanguyenthu",
+                                    "photoURL": null,
+                                    "phoneNumber": null,
+                                    "email": "hanguyen@gmail13211.com"
+
+                                }
+                            }
+                        }
+                    }
+                },
+                "description": "Add user",
+                "tags": [
+                    "user"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "uid": { "type": "string", "example": "2", "nullable": false },
+                                    "description": { "type": "string", "example": "My job is an engineer", "nullable": true },
+                                    "displayName": { "type": "string", "example": "hanguyenthu", "nullable": false },
+                                    "email": { "type": "string", "example": "hanguyen@gmail1211.com", "nullable": false },
+                                    "photoURL": { "type": "string", "example": "url.jpg", "nullable": true },
+                                    "phoneNumber": { "type": "string", "example": "0123456789", "nullable": true }
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{uid}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Get user by id",
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    { "name": "uid", "in": "path", "required": true }
+                ]
+
+            },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+
+                        }
+                    }
+                },
+                "description": "update user by id",
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    { "name": "uid", "in": "path", "required": true }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "delete user by id",
+                "tags": [
+                    "user"
+                ],
+                "parameters": [
+                    { "name": "uid", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/questions": {
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Add question",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "question"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Get question",
+                "tags": [
+                    "question"
+                ]
+            }
+        },
+        "/api/questions/{id}": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Get question by id",
+                "tags": [
+                    "question"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            },
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Update question by id",
+                "tags": [
+                    "question"
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Delete question by id",
+                "tags": [
+                    "question"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/questions/score/id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Update question score by id",
+                "tags": [
+                    "question"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/questions/comments": {
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Add question comment",
+                "tags": [
+                    "question"
+                ]
+            }
+        },
+        "/api/questions/comments/{id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Update question comment by question comment id",
+                "tags": [
+                    "question"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "delete question comment by question comment id",
+                "tags": [
+                    "question"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/answers": {
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "OK"
+                    }
+                },
+                "description": "add answer",
+                "tags": [
+                    "answer"
+                ]
+            }
+        },
+        "/api/answers/{id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "update answer by id",
+                "tags": [
+                    "answer"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "delete answer by id",
+                "tags": [
+                    "answer"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/answers/verify/{id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "verify answer by id",
+                "tags": [
+                    "answer"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/answers/score/{id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "update answer score by id",
+                "tags": [
+                    "answer"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        },
+        "/api/answers/comments": {
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "OK"
+                    }
+                },
+                "description": "add answer comment",
+                "tags": [
+                    "answer"
+                ]
+            }
+        },
+        "/api/answers/comments/{id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "update answer comment by answer comment id",
+                "tags": [
+                    "answer"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "delete answer comment by answer comment id",
+                "tags": [
+                    "answer"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true }
+                ]
+            }
+        }
+    }
+}

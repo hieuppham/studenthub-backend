@@ -1,5 +1,9 @@
 # StudentHub backend
 
+API documents
+
+<http://my-domain/api-docs>
+
 Install required packages
 ```
 npm install
@@ -7,6 +11,10 @@ npm install
 Run in development mode
 ```
 npm run dev
+```
+Run test
+```
+npm run test
 ```
 
 Prisma

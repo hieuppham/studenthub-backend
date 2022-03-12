@@ -2,6 +2,9 @@
 DROP DATABASE IF EXISTS `student_hub`;
 CREATE DATABASE `student_hub`;
 use `student_hub`;
+
+SET @anonymous = 'anonymous';
+
 DROP TABLE IF EXISTS `User`;
 CREATE TABLE `User` (
 	`uid` varchar(255) NOT NULL,
@@ -16,6 +19,8 @@ CREATE TABLE `User` (
 	PRIMARY KEY (`uid`)
 );
 
+INSERT INTO `User` (`uid`, `description`, `displayName`, `email`) VALUES (@anonymous, 'This is an anonymous user created by this application', 'Anonymous', 'anonymous@student-hub.com');
+
 DROP TABLE IF EXISTS `Question`;
 CREATE TABLE `Question` (
 	`id` int NOT NULL AUTO_INCREMENT,
@@ -23,6 +28,7 @@ CREATE TABLE `Question` (
 	`title` VARCHAR(255) NOT NULL,
 	`content` TEXT NOT NULL,
 	`score` int NOT NULL DEFAULT 0,
+	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FULLTEXT (`title`, `content`),
@@ -36,6 +42,7 @@ CREATE TABLE `Answer` (
 	`userId` varchar(255) NOT NULL,
 	`content` TEXT NOT NULL,
 	`score` int NOT NULL DEFAULT 0,
+	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted 
 	`verify` BOOLEAN NOT NULL DEFAULT FALSE,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -103,49 +110,60 @@ CREATE TABLE `Document` (
 	PRIMARY KEY (`id`)
 );
 
+--- Set to anonymous
+ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
-ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
-ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
+ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
 
-ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+--- end set to anonymous
 
-ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
-
-ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+--- delete Interested tag and revoke votes
+ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
 ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
 
-ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk1` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
+ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+--- end delete Interested tag and revoke votes
 
-ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
+--- question will be hiden so they don't matter
+ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
-ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
-
-ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk0` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
-
-ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
+ALTER TABLE `QuestionVoter` ADD CONSTRAINT `QuestionVoter_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
 ALTER TABLE `TagsOnQuestions` ADD CONSTRAINT `TagsOnQuestions_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
 
+ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk0` FOREIGN KEY (`questionId`) REFERENCES `Question`(`id`) ON DELETE CASCADE;
+--- end question will be hiden so they don't matter
+
+--- answer will be hiden so they don't matter
+ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk1` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk0` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
+--- end answer will be hiden so they don't matter
+
 ALTER TABLE `TagsOnQuestions` ADD CONSTRAINT `TagsOnQuestions_fk1` FOREIGN KEY (`tagId`) REFERENCES `Tag`(`id`);
 
-ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk0` FOREIGN KEY (`tagId`) REFERENCES `Tag`(`id`);
+ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk0` FOREIGN KEY (`tagId`) REFERENCES `Tag`(`id`); 
 
-ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ON DELETE CASCADE;
-SELECT Concat('DROP TRIGGER ', Trigger_Name, ';') FROM  information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'student_hub';
 
-DROP TRIGGER update_qs_score_and_reputation_after_insert_qs_voter;
+SELECT Concat('DROP TRIGGER IF EXISTS ', Trigger_Name, ';') FROM  information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'student_hub';
 
-DROP TRIGGER update_qs_score_and_reputation_after_update_qs_voter;
+DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_insert_qs_voter;
 
-DROP TRIGGER update_qs_score_and_reputation_after_delete_qs_voter;
+DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_update_qs_voter;
 
-DROP TRIGGER update_ans_score_and_reputation_after_insert_ans_voter;
+DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_delete_qs_voter;
 
-DROP TRIGGER update_ans_score_and_reputation_after_update_ans_voter;
+DROP TRIGGER IF EXISTS update_ans_score_and_reputation_after_insert_ans_voter;
 
-DROP TRIGGER update_ans_score_and_reputation_after_delete_ans_voter;
+DROP TRIGGER IF EXISTS update_ans_score_and_reputation_after_update_ans_voter;
+
+DROP TRIGGER IF EXISTS update_ans_score_and_reputation_after_delete_ans_voter;
+
+DROP TRIGGER IF EXISTS update_qs_ans_qs_comment_ans_commment_after_delete_user;
 
 ---- TRIGGER ON `QuestionVoter`
 CREATE TRIGGER `update_qs_score_and_reputation_after_insert_qs_voter` AFTER INSERT ON `QuestionVoter`
@@ -172,16 +190,45 @@ BEGIN
 		SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE `id` = NEW.`questionId`; 
 
 	IF NEW.`state` = 1 THEN 
-		UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
-			SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
-		);
+		BEGIN
+			IF OLD.`state` = 0 THEN
+				UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
+					SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+				);
+			ELSEIF OLD.`state` = -1 THEN
+				UPDATE `User` SET `reputation` = `reputation` + 2 + 10 WHERE `uid` = (
+					SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+				);
+			END IF;
+		END;
+	ELSEIF NEW.`state` = 0 THEN
+		BEGIN
+			IF OLD.`state` = 1 THEN
+				UPDATE `User` SET `reputation` = `reputation` - 10 WHERE `uid` = (
+					SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+				);
+			ELSEIF OLD.`state` = -1 THEN
+				UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+					SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+				);
+			END IF;
+		END;
 	ELSEIF NEW.`state` = -1 THEN
-		UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
-			SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
-		);
+		BEGIN
+			IF OLD.`state` = 0 THEN
+				UPDATE `User` SET `reputation` = `reputation` -2 WHERE `uid` = (
+					SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+				);
+			ELSEIF OLD.`state` = 1 THEN
+				UPDATE `User` SET `reputation` = `reputation` -10 -2 WHERE `uid` = (
+					SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
+				);
+			END IF;
+		END;
 	END IF;	
 END;
 
+--- ONLY HAPPEN WHEN DROP A USER (REVOKE VOTE)
 CREATE TRIGGER `update_qs_score_and_reputation_after_delete_qs_voter` AFTER DELETE ON `QuestionVoter`
 FOR EACH ROW 
 BEGIN
@@ -199,6 +246,8 @@ BEGIN
 		);
 	END IF;	
 END;
+--- END ONLY HAPPEN WHEN DROP A USER (REVOKE VOTE)
+
 ---- END TRIGGER ON `QuestionVoter`
 
 ---- TRIGGER ON `AnswerVoter`
@@ -227,20 +276,45 @@ BEGIN
 		SELECT SUM(`state`) FROM `AnswerVoter` WHERE `answerId` = NEW.`answerId`) WHERE `id` = NEW.`answerId`;
 
 	IF NEW.`state` = 1 THEN 
-		UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
-			SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
-		);
+		BEGIN
+			IF OLD.`state` = -1 THEN
+				UPDATE `User` SET `reputation` = `reputation` + 2 + 10 WHERE `uid` = (
+					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+				);
+			ELSEIF OLD.`state` = 0 THEN
+				UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
+					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+				);
+			END IF;
+		END;
+	ELSEIF NEW.`state` = 0 THEN
+		BEGIN
+			IF OLD.`state` = -1 THEN
+				UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+				);
+			ELSEIF OLD.`state` = 1 THEN
+				UPDATE `User` SET `reputation` = `reputation` - 10 WHERE `uid` = (
+					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+				);
+			END IF;
+		END;
 	ELSEIF NEW.`state` = -1 THEN
 		BEGIN
-			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
-				SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
-			);
-
-			UPDATE `User` SET `reputation` = `reputation` -1 WHERE `uid` = NEW.`userId`;
+			IF OLD.`state` = 0 THEN
+				UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+				);
+			ELSEIF OLD.`state` = 1 THEN
+				UPDATE `User` SET `reputation` = `reputation` - 10 - 2 WHERE `uid` = (
+					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+				);
+			END IF;
 		END;
 	END IF;	
 END;
 
+--- ONLY HAPPEN WHEN DROP A USER (REVOKE VOTE)
 CREATE TRIGGER  `update_ans_score_and_reputation_after_delete_ans_voter` AFTER DELETE ON `AnswerVoter`
 FOR EACH ROW
 BEGIN 
@@ -257,6 +331,8 @@ BEGIN
 		);
 	END IF;	
 END;
+--- END ONLY HAPPEN WHEN DROP A USER (REVOKE VOTE)
+
 ---- END TRIGGER ON `AnswerVoter`
 
 ---- TRIGGER ON `Answer`
@@ -270,6 +346,24 @@ BEGIN
 				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
 			);
 		END;
+	ELSEIF NEW.`verify` = FALSE THEN
+		BEGIN
+			UPDATE `User` SET `reputation` = `reputation` - 15 WHERE `uid` = NEW.`userId`;
+			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
+			);
+		END;
 	END IF;
 END;  
 ---- END TRIGGER ON `Answer`
+
+--- TRIGGER ON `User`
+CREATE TRIGGER `update_qs_ans_qs_comment_ans_commment_after_delete_user` AFTER DELETE ON `User`
+FOR EACH ROW
+BEGIN
+	UPDATE `Question` SET `userId` = @anonymous WHERE `userId` = OLD.`uid`;
+	UPDATE `Answer` SET `userId` = @anonymous WHERE `userId` = OLD.`uid`;
+	UPDATE `QuestionComment` SET `userId` = @anonymous WHERE `userId` = OLD.`uid`;
+	UPDATE `AnswerComment` SET `userId` = @anonymous WHERE `userId` = OLD.`uid`;
+END;
+--- END TRIGGER ON `User`
