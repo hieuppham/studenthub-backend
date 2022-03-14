@@ -6,7 +6,8 @@ const swaggerDocs = require('./swagger.json')
 
 const user = require('./src/user/user.route')
 const question = require("./src/question/question.route")
-const answers = require("./src/answer/answer.route")
+const answer = require("./src/answer/answer.route")
+const document = require('./src/document/document.route')
 
 if (process.env.NODE_ENV !== 'test') {
     app.use(morgan('combined'))
@@ -19,7 +20,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs, { explorer: t
 
 app.use("/api/users", user)
 app.use("/api/questions", question)
-app.use("/api/answers", answers)
+app.use("/api/answers", answer)
+app.use("/api/documents", document)
 
 const PORT = process.env.PORT || 8080
 const server = app.listen(PORT, () => {

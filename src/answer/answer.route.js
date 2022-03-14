@@ -6,7 +6,7 @@ const { addAnswerComment, updateAnswerCommentById, deleteAnswerCommentById } = r
 router.post("/", addAnswer)
 router.put("/:id", updateAnswerById)
 router.delete("/:id", deleteAnswerById)
-router.put("/verify/:id", verifyAnswer) //not test
+router.put("/verify/:id", verifyAnswer) //not testd yet
 
 router.put("/score/:id", updateAnswerScoreById)
 
