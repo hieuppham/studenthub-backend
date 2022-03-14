@@ -1,7 +1,7 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-module.exports = { addQuestion, findQuestions, findQuestionById, updateQuestionById, deleteQuesionById }
+module.exports = { addQuestion, findQuestions, findQuestionById, updateQuestionById, deleteQuesionById, getTagIdsByTagNames }
 
 async function addQuestion(req, res) {
     try {
@@ -76,7 +76,7 @@ async function findQuestions(req, res) {
             },
             orderBy: {
                 //use only one argument
-                createdAt: req.query.createdAt,
+                updatedAt: req.query.updatedAt,
                 score: req.query.score
             }
         })
@@ -89,10 +89,9 @@ async function findQuestions(req, res) {
 
 async function findQuestionById(req, res) {
     try {
-        const id = Number(req.params.id)
         const question = await prisma.question.findMany({
             where: {
-                id: id,
+                id: Number(req.params.id),
                 deleted: false
             },
             include: {
@@ -183,10 +182,9 @@ async function updateQuestionById(req, res) {
 
 async function deleteQuesionById(req, res) {
     try {
-        const id = Number(req.params.id)
         const question = await prisma.question.update({
             where: {
-                id: id
+                id: Number(req.params.id)
             },
             data: {
                 deleted: true
@@ -202,21 +200,25 @@ async function deleteQuesionById(req, res) {
 async function getTagIdsByTagNames(tagNames) {
     try {
         const existTags = await prisma.tag.findMany({
-            where: {
-                name: { in: tagNames }
-            }
-        })
+                where: {
+                    name: { in: tagNames }
+                }
+            })
+            // get id of exist tags
         let tagIds = existTags.map(tag => new Object({ tagId: tag.id }))
 
         const existTagsName = existTags.map(tag => tag.name)
+            // get new tags from request (which may contain both old and new tags)
         const newTagsName = tagNames.filter(name => !existTagsName.includes(name))
 
-        for (let i = 0; i < newTagsName.length; i++) {
+        // add new tags to TagsOnQuestions
+        for (let tagName of newTagsName) {
             const newTag = await prisma.tag.create({
-                data: {
-                    name: newTagsName[i]
-                }
-            })
+                    data: {
+                        name: tagName
+                    }
+                })
+                // push new tag id into result
             tagIds.push(new Object({ tagId: newTag.id }))
         }
 

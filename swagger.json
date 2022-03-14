@@ -62,7 +62,7 @@
                         "description": "OK"
                     }
                 },
-                "description": "Get user by id",
+                "description": "Get user by uid",
                 "tags": [
                     "user"
                 ],
