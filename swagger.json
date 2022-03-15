@@ -12,7 +12,7 @@
             "post": {
                 "responses": {
                     "201": {
-                        "description": "created",
+                        "description": "CREATED",
                         "content": {
                             "application/json": {
                                 "example": {
@@ -30,7 +30,7 @@
                         }
                     }
                 },
-                "description": "Add user",
+                "description": "Add a user",
                 "tags": [
                     "user"
                 ],
@@ -41,16 +41,28 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "uid": { "type": "string", "example": "2", "nullable": false },
+                                    "uid": { "type": "string", "example": "2", "nullable": false, "maxLength": 255 },
                                     "description": { "type": "string", "example": "My job is an engineer", "nullable": true },
-                                    "displayName": { "type": "string", "example": "hanguyenthu", "nullable": false },
-                                    "email": { "type": "string", "example": "hanguyen@gmail1211.com", "nullable": false },
+                                    "displayName": { "type": "string", "example": "hanguyenthu", "nullable": false, "maxLength": 255 },
+                                    "email": { "type": "string", "example": "hanguyen@gmail1211.com", "nullable": false, "maxLength": 255 },
                                     "photoURL": { "type": "string", "example": "url.jpg", "nullable": true },
-                                    "phoneNumber": { "type": "string", "example": "0123456789", "nullable": true }
+                                    "phoneNumber": { "type": "string", "example": "0123456789", "nullable": true, "maxLength": 20 }
                                 }
                             }
 
                         }
+                    }
+                }
+            },
+            "get": {
+                "description": "Search users",
+                "tags": ["user"],
+                "parameters": [
+                    { "name": "what", "in": "query", "required": false, "description": "Search by email or displayName" }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
                     }
                 }
             }
@@ -59,15 +71,33 @@
             "get": {
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "uid": "anonymous",
+                                    "reputation": 0,
+                                    "description": "This is an anonymous user created by this application",
+                                    "joiningDate": "2022-03-14T00:00:00.000Z",
+                                    "displayName": "Anonymous",
+                                    "photoURL": null,
+                                    "phoneNumber": null,
+                                    "email": "anonymous@student-hub.com",
+                                    "Question": [],
+                                    "QuestionComment": [],
+                                    "Answer": [],
+                                    "AnswerComment": []
+                                }
+                            }
+                        }
                     }
                 },
-                "description": "Get user by uid",
+                "description": "Get a user by uid",
                 "tags": [
                     "user"
                 ],
                 "parameters": [
-                    { "name": "uid", "in": "path", "required": true }
+                    { "name": "uid", "in": "path", "required": true, "description": "user id" }
                 ]
 
             },
@@ -78,10 +108,18 @@
                     }
                 },
                 "requestBody": {
-                    "required": true,
+                    "required": false,
                     "content": {
                         "application/json": {
-
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "description": { "type": "string", "example": "My job is an engineer", "nullable": true },
+                                    "displayName": { "type": "string", "example": "hanguyenthu", "nullable": true, "maxLength": 255 },
+                                    "photoURL": { "type": "string", "example": "url.jpg", "nullable": true },
+                                    "phoneNumber": { "type": "string", "example": "0123456789", "nullable": true, "maxLength": 20 }
+                                }
+                            }
                         }
                     }
                 },
@@ -90,7 +128,7 @@
                     "user"
                 ],
                 "parameters": [
-                    { "name": "uid", "in": "path", "required": true }
+                    { "name": "uid", "in": "path", "required": true, "example": "2", "description": "user id" }
                 ]
             },
             "delete": {
@@ -104,7 +142,7 @@
                     "user"
                 ],
                 "parameters": [
-                    { "name": "uid", "in": "path", "required": true }
+                    { "name": "uid", "in": "path", "required": true, "example": "2", "description": "user id" }
                 ]
             }
         },
@@ -123,9 +161,19 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "userId": {
-                                        "type": "string"
+                                    "userId": { "type": "string", "example": "1", "nullable": false, "maxLength": 255 },
+                                    "title": { "type": "string", "example": "How to learn python", "nullable": false, "maxLength": 255 },
+                                    "content": { "type": "string", "example": "I am new to python", "nullable": false },
+                                    "tags": {
+                                        "type": "array",
+                                        "example": ["python", "ai", "ml"],
+                                        "nullable": false,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        }
                                     }
+
                                 }
                             }
                         }
@@ -144,6 +192,28 @@
                 "description": "Get question",
                 "tags": [
                     "question"
+                ],
+                "parameters": [
+                    { "name": "what", "in": "query", "example": "python", "required": false, "description": "Search by title, content" },
+                    { "name": "tags", "in": "query", "example": "java,spring,jog4j", "required": false, "description": "search by tags" },
+                    {
+                        "name": "updatedAt",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["asc", "desc"]
+                        },
+                        "description": "sort by `updatedAt`, only use when not use parameter `score`"
+                    }, {
+                        "name": "score",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": ["asc", "desc"]
+                        },
+                        "description": "sort by `score`, only use when not use parameter `updatedAt`"
+                    }
+
                 ]
             }
         },
@@ -159,7 +229,7 @@
                     "question"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
+                    { "name": "id", "in": "path", "required": true, "example": 1 }
                 ]
             },
             "put": {
@@ -171,7 +241,33 @@
                 "description": "Update question by id",
                 "tags": [
                     "question"
-                ]
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true, "example": 1, "description": "question Id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": { "type": "string", "example": "How to learn python", "nullable": false, "maxLength": 255 },
+                                    "content": { "type": "string", "example": "I am new to python", "nullable": false },
+                                    "tags": {
+                                        "type": "array",
+                                        "example": ["python", "ai", "ml"],
+                                        "nullable": false,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 255
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             "delete": {
                 "responses": {
@@ -179,29 +275,48 @@
                         "description": "OK"
                     }
                 },
-                "description": "Delete question by id",
+                "description": "Soft delete (aka hide it from other people) question by id",
                 "tags": [
                     "question"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
+                    { "name": "id", "in": "path", "required": true, "example": 2, "description": "question Id" }
                 ]
             }
         },
-        "/api/questions/score/id}": {
+        "/api/questions/score/{id}": {
             "put": {
                 "responses": {
                     "200": {
                         "description": "OK"
                     }
                 },
-                "description": "Update question score by id",
+                "description": "Update question score by question Id",
                 "tags": [
                     "question"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
-                ]
+                    { "name": "id", "in": "path", "required": true, "description": "question Id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userId": { "type": "string", "example": "2", "nullable": false, "description": "userId" },
+                                    "state": {
+                                        "example": 1,
+                                        "nullable": false,
+                                        "type": "number",
+                                        "enum": [-1, 0, 1]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/questions/comments": {
@@ -214,7 +329,34 @@
                 "description": "Add question comment",
                 "tags": [
                     "question"
-                ]
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "questionId": {
+                                        "type": "number",
+                                        "example": 1,
+                                        "nullable": false
+                                    },
+                                    "userId": {
+                                        "type": "string",
+                                        "example": "2",
+                                        "nullable": false
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Just watch youtube videos",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/questions/comments/{id}": {
@@ -229,8 +371,21 @@
                     "question"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
-                ]
+                    { "name": "id", "in": "path", "required": true, "description": "comment Id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "content": { "type": "string", "example": "I dont clearly understand your question", "nullable": false }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             "delete": {
                 "responses": {
@@ -243,7 +398,7 @@
                     "question"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
+                    { "name": "id", "in": "path", "required": true, "description": "comment Id" }
                 ]
             }
         },
@@ -257,8 +412,25 @@
                 "description": "add answer",
                 "tags": [
                     "answer"
-                ]
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "questionId": { "type": "number", "example": 1, "nullable": false },
+                                    "userId": { "type": "string", "example": "2", "nullable": false },
+                                    "content": { "type": "string", "example": "Just watch youtube videos", "nullable": false }
+                                }
+
+                            }
+                        }
+                    }
+                }
             }
+
         },
         "/api/answers/{id}": {
             "put": {
@@ -272,8 +444,25 @@
                     "answer"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
-                ]
+                    { "name": "id", "in": "path", "required": true, "description": "answer id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "content": {
+                                        "type": "string",
+                                        "example": "Thanks for you answer",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             "delete": {
                 "responses": {
@@ -281,12 +470,12 @@
                         "description": "OK"
                     }
                 },
-                "description": "delete answer by id",
+                "description": "Soft delete (aka hide it from other people) answer by id",
                 "tags": [
                     "answer"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
+                    { "name": "id", "in": "path", "required": true, "description": "answer id" }
                 ]
             }
         },
@@ -302,8 +491,25 @@
                     "answer"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
-                ]
+                    { "name": "id", "in": "path", "required": true, "description": "answer id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "verify": {
+                                        "type": "boolean",
+                                        "example": true,
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/answers/score/{id}": {
@@ -318,8 +524,26 @@
                     "answer"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
-                ]
+                    { "name": "id", "in": "path", "required": true, "description": "answer id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userId": { "type": "string", "example": "2", "nullable": false },
+                                    "state": {
+                                        "type": "number",
+                                        "enum": [-1, 0, 1],
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/answers/comments": {
@@ -332,7 +556,22 @@
                 "description": "add answer comment",
                 "tags": [
                     "answer"
-                ]
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "questionId": { "type": "number", "example": 1, "nullable": false },
+                                    "userId": { "type": "string", "example": "2", "nullable": false },
+                                    "content": { "type": "string", "example": "Thanks for your answer", "nullable": false }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/answers/comments/{id}": {
@@ -347,8 +586,21 @@
                     "answer"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
-                ]
+                    { "name": "id", "in": "path", "required": true, "description": "comment id" }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "content": { "type": "string", "example": "Thanks for your answer", "nullable": false }
+                                }
+                            }
+                        }
+                    }
+                }
             },
             "delete": {
                 "responses": {
@@ -361,9 +613,99 @@
                     "answer"
                 ],
                 "parameters": [
-                    { "name": "id", "in": "path", "required": true }
+                    { "name": "id", "in": "path", "required": true, "description": "comment id" }
                 ]
             }
+        },
+        "/api/documents": {
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    }
+                },
+                "description": "Add document",
+                "tags": [
+                    "document"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": { "type": "string", "nullable": false },
+                                    "url": {
+                                        "type": "string",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "get all documents",
+                "tags": [
+                    "document"
+                ]
+            }
+        },
+        "/api/documents/{id}": {
+            "put": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Update document by id",
+                "tags": [
+                    "document"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "title": { "type": "string", "nullable": false },
+                                    "url": {
+                                        "type": "string",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true, "description": "document id" }
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    }
+                },
+                "description": "Delete a document by id ",
+                "tags": [
+                    "document"
+                ],
+                "parameters": [
+                    { "name": "id", "in": "path", "required": true, "description": "document id" }
+                ]
+
+            }
         }
+
     }
 }
