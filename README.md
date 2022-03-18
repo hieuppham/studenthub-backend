@@ -2,7 +2,7 @@
 
 API documents
 
-<http://my-domain/api-docs>
+<https://studenthub-backend-development.up.railway.app/api-docs>
 
 Install required packages
 ```
