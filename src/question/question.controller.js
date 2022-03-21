@@ -3,6 +3,8 @@ const prisma = new PrismaClient()
 
 module.exports = { addQuestion, findQuestions, findQuestionById, updateQuestionById, deleteQuesionById, getTagIdsByTagNames }
 
+const QUESTIONS_PER_PAGE = 15
+
 async function addQuestion(req, res) {
     try {
 
@@ -28,6 +30,7 @@ async function findQuestions(req, res) {
     try {
         const what = req.query.what
         const tags = req.query.tags ? { OR: req.query.tags.split(',').map(tag => new Object({ name: tag })) } : {}
+        const page = req.query.page ? Number(req.query.page) : 1
 
         const questions = await prisma.question.findMany({
             include: {
@@ -78,7 +81,9 @@ async function findQuestions(req, res) {
                 //use only one argument
                 updatedAt: req.query.updatedAt,
                 score: req.query.score
-            }
+            },
+            take: QUESTIONS_PER_PAGE,
+            skip: QUESTIONS_PER_PAGE * (page - 1)
         })
 
         res.send(questions)

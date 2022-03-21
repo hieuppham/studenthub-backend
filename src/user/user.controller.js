@@ -4,6 +4,8 @@ const { getTagIdsByTagNames } = require('../question/question.controller')
 
 module.exports = { addUser, findUsers, findById, updateById, updateInterestedTagById, deleteById }
 
+const USERS_PER_PAGE = 36
+
 async function addUser(req, res) {
     try {
         const user = await prisma.user.create({
@@ -31,6 +33,7 @@ async function addUser(req, res) {
 async function findUsers(req, res) {
     try {
         const what = req.query.what
+        const page = req.query.page ? Number(req.query.page) : 1
         const users = await prisma.user.findMany({
             where: {
                 displayName: {
@@ -56,7 +59,9 @@ async function findUsers(req, res) {
                         Question: true
                     }
                 }
-            }
+            },
+            take: USERS_PER_PAGE,
+            skip: USERS_PER_PAGE * (page - 1)
         })
         res.send(users)
     } catch (error) {
