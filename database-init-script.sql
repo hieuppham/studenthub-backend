@@ -1,4 +1,4 @@
---NOTE: The changes I made are just in my local database - hieuppham
+--NOTE: The changes I made are just in my local database
 DROP DATABASE IF EXISTS `student_hub`;
 CREATE DATABASE `student_hub`;
 use `student_hub`;
@@ -32,7 +32,7 @@ CREATE TABLE `Question` (
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	FULLTEXT (`title`, `content`),
-	PRIMARY KEY (`id`)
+	PRIMARY KEY(`id`)
 );
 DROP TABLE IF EXISTS `Answer`;
 
@@ -44,7 +44,8 @@ CREATE TABLE `Answer` (
 	`score` int NOT NULL DEFAULT 0,
 	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted 
 	`verify` BOOLEAN NOT NULL DEFAULT FALSE,
-	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt`
+                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 );
@@ -68,7 +69,7 @@ DROP TABLE IF EXISTS `Tag`;
 CREATE TABLE `Tag` (
 	`id` int NOT NULL AUTO_INCREMENT,
 	`name` varchar(255) NOT NULL UNIQUE,
-	PRIMARY KEY (`id`)
+	PRIMARY KEY(`id`)
 );
 DROP TABLE IF EXISTS `QuestionComment`;
 CREATE TABLE `QuestionComment` (
@@ -111,13 +112,13 @@ CREATE TABLE `Document` (
 );
 
 --- Set to anonymous
-ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+-- ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
-ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+-- ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
-ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
+-- ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
 
-ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+-- ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 --- end set to anonymous
 
 --- delete Interested tag and revoke votes
@@ -141,6 +142,7 @@ ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk0` FOREIGN KEY (
 --- answer will be hiden so they don't matter
 ALTER TABLE `AnswerVoter` ADD CONSTRAINT `AnswerVoter_fk1` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
 
+            
 ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk0` FOREIGN KEY (`answerId`) REFERENCES `Answer`(`id`) ON DELETE CASCADE;
 --- end answer will be hiden so they don't matter
 
@@ -153,6 +155,7 @@ SELECT Concat('DROP TRIGGER IF EXISTS ', Trigger_Name, ';') FROM  information_sc
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_insert_qs_voter;
 
+          
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_update_qs_voter;
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_delete_qs_voter;
@@ -165,6 +168,7 @@ DROP TRIGGER IF EXISTS update_ans_score_and_reputation_after_delete_ans_voter;
 
 DROP TRIGGER IF EXISTS update_qs_ans_qs_comment_ans_commment_after_delete_user;
 
+               
 ---- TRIGGER ON `QuestionVoter`
 CREATE TRIGGER `update_qs_score_and_reputation_after_insert_qs_voter` AFTER INSERT ON `QuestionVoter`
 FOR EACH ROW 
