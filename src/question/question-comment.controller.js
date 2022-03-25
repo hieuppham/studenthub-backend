@@ -42,7 +42,7 @@ async function deleteQuestionCommentById(req, res) {
                 id: Number(req.params.id)
             }
         })
-        const result = { message: question ? `Deleted commnent ${req.params.id} of question ${question.id}` : "fail" }
+        const result = { message: question ? `Deleted commnent ${req.params.id} of question ${question.id}` : "Something wrong, try again" }
         res.send(result)
     } catch (error) {
         res.status(500).send(error.message)

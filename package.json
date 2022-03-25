@@ -13,7 +13,9 @@
     "license": "ISC",
     "dependencies": {
         "@prisma/client": "^3.10.0",
+        "cors": "^2.8.5",
         "express": "^4.17.3",
+        "firebase-admin": "^10.0.2",
         "mysql2": "^2.3.3",
         "prisma": "^3.10.0",
         "swagger-ui-express": "^4.3.0"

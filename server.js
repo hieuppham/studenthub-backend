@@ -3,16 +3,19 @@ const app = express()
 const morgan = require('morgan')
 const swaggerUi = require('swagger-ui-express')
 const swaggerDocs = require('./swagger.json')
+const cors = require("cors");
+
 
 const user = require('./src/user/user.route')
 const question = require("./src/question/question.route")
 const answer = require("./src/answer/answer.route")
 const document = require('./src/document/document.route')
 
-if (process.env.NODE_ENV !== 'test') {
-    app.use(morgan('combined'))
-}
+// if (process.env.NODE_ENV !== 'test') {
+//     app.use(morgan('combined'))
+// }
 
+app.use(cors());
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
