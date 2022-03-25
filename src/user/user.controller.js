@@ -2,32 +2,9 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { getTagIdsByTagNames } = require('../question/question.controller')
 
-module.exports = { addUser, findUsers, findById, updateById, updateInterestedTagById, deleteById }
+module.exports = { findUsers, findById, updateById, updateInterestedTagById, deleteById }
 
 const USERS_PER_PAGE = 36
-
-async function addUser(req, res) {
-    try {
-        const user = await prisma.user.create({
-            data: {
-                uid: req.body.uid,
-                description: req.body.description,
-                displayName: req.body.displayName,
-                photoURL: req.body.photoURL,
-                phoneNumber: req.body.phoneNumber,
-                email: req.body.email,
-                InterestedTag: {
-                    createMany: {
-                        data: await getTagIdsByTagNames(req.body.tags)
-                    }
-                }
-            }
-        })
-        res.status(201).send(user)
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
 
 // find by name, email
 async function findUsers(req, res) {
@@ -79,7 +56,16 @@ async function findById(req, res) {
                 Question: true,
                 QuestionComment: true,
                 Answer: true,
-                AnswerComment: true
+                AnswerComment: true,
+                InterestedTag: {
+                    select: {
+                        Tag: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
             }
         })
         res.send(user)
@@ -119,6 +105,18 @@ async function updateInterestedTagById(req, res) {
                         data: await getTagIdsByTagNames(req.body.tags)
                     }
                 }
+            },
+            select: {
+                uid: true,
+                InterestedTag: {
+                    select: {
+                        Tag: {
+                            select: {
+                                name: true
+                            }
+                        }
+                    }
+                }
             }
         })
         res.send(user)
@@ -134,7 +132,7 @@ async function deleteById(req, res) {
                 uid: req.params.uid
             }
         })
-        res.send(user)
+        res.send({ message: user ? "Delete user " + user.uid : "Something wrong, try again" })
     } catch (error) {
         res.status(500).send(error.message)
     }

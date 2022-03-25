@@ -1,56 +1,51 @@
 process.env.NODE_ENV = 'test'
 
-const chai = require('chai')
+const { assert } = require('chai')
 const chaiHttp = require('chai-http')
-
+const chai = require('chai')
 const server = require('../../server')
-const questions = require('../question/question.data.test')
-const { PrismaClient } = require('@prisma/client')
-const assert = chai.assert
+const { questions } = require('../question/question.data.test')
 
-const prisma = new PrismaClient()
 require('../user/user.controller.test')
 
 chai.use(chaiHttp)
 
 describe('Questions', () => {
 
-    describe("/post /api/questions", () => {
+    before(() => {
+        chai.request(server)
+            .delete("/api/questions")
+            .end((err, res) => {
+
+            })
+    })
+
+    describe("POST /api/questions", () => {
         it('it should add all questions', done => {
             questions.forEach(question => {
                 chai.request(server)
                     .post('/api/questions')
                     .send(question)
-                    .end((err, res) => {})
+                    .end((err, res) => {
+                        assert.equal(res.status, 201)
+                        assert.equal(res.body.userId, question.userId)
+                        assert.equal(res.body.content, question.content)
+                    })
             })
             done()
         })
     })
 
-    describe('/get /api/questions', () => {
+    describe('GET /api/questions', () => {
         it('it should get all questions', (done) => {
             chai.request(server)
                 .get("/api/questions")
-                .end((err, res) => {})
-            done()
-        })
-    })
-
-    describe('/delete /api/questions/:id', () => {
-        it('it should hiden all questions', (done) => {
-            prisma.question.findMany().then(questions => {
-                var questionIds = questions.map(question => question.id)
-                questionIds.forEach(id => {
-                    chai.request(server)
-                        .delete('/api/questions/' + id)
-                        .end((err, res) => {
-                            assert.equal(true, res.body.deleted)
-                        })
+                .end((err, res) => {
+                    assert.equal(res.status, 200)
+                    assert.equal(res.body.length, 6)
+                    done()
                 })
-                done()
-            })
         })
     })
 
-    server.close()
 })

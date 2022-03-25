@@ -1,11 +1,20 @@
 const router = require('express').Router()
-const { addUser, findById, updateById, updateInterestedTagById, deleteById, findUsers } = require('./user.controller')
+const { findById, updateById, updateInterestedTagById, deleteById, findUsers } = require('./user.controller')
+const { authorize, createOrUpdateUser } = require("../middlewares/firebase.middleware");
 
-router.post("/", addUser)
-router.get("/", findUsers)
-router.get("/:uid", findById)
-router.put("/:uid", updateById)
-router.put("/tags/:uid", updateInterestedTagById)
-router.delete("/:uid", deleteById)
+function getUid(req, res, next) {
+    res.locals.uid = req.params.uid;
+    next();
+}
 
-module.exports = router
+const authQueue = [getUid, authorize];
+
+router.post("/login", createOrUpdateUser);
+router.get("/", findUsers);
+router.get("/:uid", findById);
+
+router.put("/:uid", authQueue, updateById);
+router.put("/tags/:uid", authQueue, updateInterestedTagById);
+router.delete("/:uid", authQueue, deleteById);
+
+module.exports = router;

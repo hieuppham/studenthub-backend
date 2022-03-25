@@ -1,17 +1,25 @@
 const router = require('express').Router()
 const { addAnswer, updateAnswerById, deleteAnswerById, verifyAnswer } = require("./answer.controller")
 const { updateAnswerScoreById } = require("./answer-voter.controller")
-const { addAnswerComment, updateAnswerCommentById, deleteAnswerCommentById } = require("./answer-comment.controller")
+const { addAnswerComment, updateAnswerCommentById, deleteAnswerCommentById } = require("./answer-comment.controller");
+const { authorize } = require('../middlewares/firebase.middleware');
 
-router.post("/", addAnswer)
-router.put("/:id", updateAnswerById)
-router.delete("/:id", deleteAnswerById)
-router.put("/verify/:id", verifyAnswer) //not testd yet
+function getUid(req, res, next) {
+    res.locals.uid = req.body.userId;
+    next();
+}
 
-router.put("/score/:id", updateAnswerScoreById)
+const authQueue = [getUid, authorize];
 
-router.post("/comments", addAnswerComment)
-router.put("/comments/:id", updateAnswerCommentById)
-router.delete("/comments/:id", deleteAnswerCommentById)
+router.post("/", authQueue, addAnswer);
+router.put("/:id", authQueue, updateAnswerById);
+router.delete("/:id", authQueue, deleteAnswerById);
+router.put("/verify/:id", authQueue, verifyAnswer);
+
+router.put("/score/:id", authQueue, updateAnswerScoreById);
+
+router.post("/comments", authQueue, addAnswerComment);
+router.put("/comments/:id", authQueue, updateAnswerCommentById);
+router.delete("/comments/:id", authQueue, deleteAnswerCommentById);
 
 module.exports = router

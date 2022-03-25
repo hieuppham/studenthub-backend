@@ -46,7 +46,7 @@ async function deleteDocumentByid(req, res) {
                 id: req.params.id
             }
         })
-        const result = { message: document ? `Deleted document ${document.id}` : `fail` }
+        const result = { message: document ? `Deleted document ${document.id}` : `Somethin wrong, try again.` }
         res.send(result)
     } catch (error) {
         res.status(500).send(error.message)

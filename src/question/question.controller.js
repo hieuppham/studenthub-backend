@@ -195,7 +195,7 @@ async function deleteQuesionById(req, res) {
                 deleted: true
             }
         })
-        res.send(question)
+        res.send({ message: question ? "Deleted question " + question.id : "Something wrong, try again." });
     } catch (error) {
         res.status(500).send(error.message)
     }

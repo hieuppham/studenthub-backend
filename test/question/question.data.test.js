@@ -7,4 +7,6 @@ const questions = [
     { userId: '3', title: 'How to get all triggers in MySQL', content: 'I created a lot of triggers new i wanna drop all of them', tags: ['mysql', 'database', 'trigger'] },
 ]
 
-module.exports = questions
+const questionComments = []
+
+module.exports = { questions }

@@ -45,7 +45,7 @@ async function deleteAnswerById(req, res) {
             }
         })
 
-        const result = { message: answer ? `Deleted answer ${answer.id}` : "fail" }
+        const result = { message: answer ? `Deleted answer ${answer.id}` : "Something wrong, try again" }
         res.send(result)
     } catch (error) {
         res.status(500).send(error.message)
