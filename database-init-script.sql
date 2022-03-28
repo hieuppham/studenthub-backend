@@ -31,6 +31,7 @@ CREATE TABLE `Question` (
 	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	FULLTEXT (`title`, `content`),
 	PRIMARY KEY(`id`)
 );
@@ -44,9 +45,9 @@ CREATE TABLE `Answer` (
 	`score` int NOT NULL DEFAULT 0,
 	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted 
 	`verify` BOOLEAN NOT NULL DEFAULT FALSE,
-	`createdAt`
-                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `QuestionVoter`;
@@ -79,6 +80,7 @@ CREATE TABLE `QuestionComment` (
 	`content` TEXT NOT NULL,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `AnswerComment`;
@@ -89,6 +91,7 @@ CREATE TABLE `AnswerComment` (
 	`content` TEXT NOT NULL,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `TagsOnQuestions`;
@@ -112,13 +115,13 @@ CREATE TABLE `Document` (
 );
 
 --- Set to anonymous
--- ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
--- ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
--- ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
+ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
 
--- ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 --- end set to anonymous
 
 --- delete Interested tag and revoke votes
