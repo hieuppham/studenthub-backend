@@ -4,7 +4,7 @@ const { URL } = require('url');
 const MY_URL = new URL('https://graph.facebook.com');
 MY_URL.search = `?access_token=${process.env.FACEBOOK_LONG_LIVED_TOKEN}`;
 
-module.exports = { addPost, updatePost, deletePost };
+module.exports = { addPost, deletePost };
 
 async function addPost(question, tags) {
     try {
@@ -17,17 +17,7 @@ async function addPost(question, tags) {
         return error;
     }
 }
-// NOT DONE
-async function updatePost(question, tags) {
-    try {
-        await deletePost(question.facebookId);
-        const data = await addPost(question, tags);
-        return data;
-    } catch (error) {
-        return error;
-    }
-}
-//
+
 
 async function deletePost(postId) {
     try {

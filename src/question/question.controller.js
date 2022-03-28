@@ -198,12 +198,6 @@ async function updateQuestionById(req, res) {
             }
         });
 
-        // const facebookPost = await facebookApi.updatePost(question, req.body.tags);
-        // await prisma.question.update({
-        //     where: { id: question.id },
-        //     data: { facebookId: facebookPost.id }
-        // });
-
         res.send(question);
     } catch (error) {
         res.status(500).send(error.message);
