@@ -46,7 +46,9 @@
                 "security": [
                     { "authorization": [] }
                 ]
-            },
+            }
+        },
+        "/api/users": {
             "get": {
                 "description": "Search users",
                 "tags": ["user"],
