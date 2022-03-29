@@ -1,7 +1,8 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const facebookApi = require('../utils/facebook-comment.api');
 
-module.exports = { addAnswer, updateAnswerById, deleteAnswerById, verifyAnswer }
+module.exports = { addAnswer, updateAnswerById, deleteAnswerById, verifyAnswer };
 
 async function addAnswer(req, res) {
     try {
@@ -10,11 +11,33 @@ async function addAnswer(req, res) {
                 questionId: req.body.questionId,
                 userId: req.body.userId,
                 content: req.body.content
+            },
+            include: {
+                User: {
+                    select: {
+                        displayName: true
+                    }
+                },
+                Question: {
+                    select: {
+                        facebookId: true
+                    }
+                }
             }
-        })
-        res.status(201).send(answer)
+        });
+        const facebookComment = await facebookApi.addComment(answer.Question.facebookId, answer);
+        await prisma.answer.update({
+            where: {
+                id: answer.id
+            },
+            data: {
+                facebookId: facebookComment.id
+            }
+        });
+
+        res.status(201).send(answer);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -26,11 +49,21 @@ async function updateAnswerById(req, res) {
             },
             data: {
                 content: req.body.content
+            },
+            include: {
+                User: {
+                    select: {
+                        displayName: true
+                    }
+                }
             }
-        })
-        res.send(answer)
+        });
+
+        await facebookApi.updateComment(answer);
+
+        res.send(answer);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -43,12 +76,14 @@ async function deleteAnswerById(req, res) {
             data: {
                 deleted: true
             }
-        })
+        });
 
-        const result = { message: answer ? `Deleted answer ${answer.id}` : "Something wrong, try again" }
-        res.send(result)
+        await facebookApi.deleteComment(answer.facebookId);
+
+        const result = { message: answer ? `Deleted answer ${answer.id}` : "Something wrong, try again" };
+        res.send(result);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -61,9 +96,9 @@ async function verifyAnswer(req, res) {
             data: {
                 verify: req.body.verify
             }
-        })
-        res.send(answer)
+        });
+        res.send(answer);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }

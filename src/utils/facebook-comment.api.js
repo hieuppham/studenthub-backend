@@ -6,9 +6,9 @@ MY_URL.search = `?access_token=${process.env.FACEBOOK_LONG_LIVED_TOKEN}`;
 
 module.exports = { addComment, updateComment, deleteComment };
 
-async function addComment(comment) {
+async function addComment(objectId, comment) {
     try {
-        MY_URL.pathname = `/v13.0/${comment.Question.facebookId}/comments`;
+        MY_URL.pathname = `/v13.0/${objectId}/comments`;
 
         const message = generateComment(comment);
         const response = await axios.post(MY_URL.toString(), { message });
@@ -42,9 +42,8 @@ async function deleteComment(commentId) {
 }
 
 function generateComment(comment) {
-    const reputations = comment.User.reputation;
     let message = "";
-    message += `FROM: ${comment.User.displayName} [${reputations} ${reputations == 0 ? 'reputation' : 'reputaions'}]`;
+    message += `FROM: ${comment.User.displayName}`;
     message += `\n\n`;
     message += `${comment.content}`;
     return message;

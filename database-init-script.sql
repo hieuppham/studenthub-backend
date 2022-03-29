@@ -157,8 +157,8 @@ ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk0` FOREIGN KEY (`tagId`)
 SELECT Concat('DROP TRIGGER IF EXISTS ', Trigger_Name, ';') FROM  information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'student_hub';
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_insert_qs_voter;
-
-          
+drop TRIGGER IF EXISTS update_reputation_after_verify_answer;
+DROP TRIGGER IF EXISTS           
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_update_qs_voter;
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_delete_qs_voter;
@@ -343,6 +343,7 @@ END;
 ---- END TRIGGER ON `AnswerVoter`
 
 ---- TRIGGER ON `Answer`
+
 CREATE TRIGGER `update_reputation_after_verify_answer` AFTER UPDATE ON `Answer`
 FOR EACH ROW
 BEGIN
@@ -350,14 +351,14 @@ BEGIN
 		BEGIN
 			UPDATE `User` SET `reputation` = `reputation` + 15 WHERE `uid` = NEW.`userId`;
 			UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
-				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
+				SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
 			);
 		END;
 	ELSEIF NEW.`verify` = FALSE THEN
 		BEGIN
 			UPDATE `User` SET `reputation` = `reputation` - 15 WHERE `uid` = NEW.`userId`;
 			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
-				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
+				SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
 			);
 		END;
 	END IF;

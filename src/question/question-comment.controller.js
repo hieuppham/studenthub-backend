@@ -15,8 +15,7 @@ async function addQuestionComment(req, res) {
             include: {
                 User: {
                     select: {
-                        displayName: true,
-                        reputation: true
+                        displayName: true
                     }
                 },
                 Question: {
@@ -27,7 +26,7 @@ async function addQuestionComment(req, res) {
             }
         });
 
-        const facebookComment = await facebookApi.addComment(comment);
+        const facebookComment = await facebookApi.addComment(comment.Question.facebookId, comment);
         await prisma.questionComment.update({
             where: {
                 id: comment.id
@@ -55,8 +54,7 @@ async function updateQuestionCommentById(req, res) {
             include: {
                 User: {
                     select: {
-                        displayName: true,
-                        reputation: true
+                        displayName: true
                     }
                 }
             }
@@ -80,7 +78,7 @@ async function deleteQuestionCommentById(req, res) {
 
         await facebookApi.deleteComment(comment.facebookId);
 
-        const result = { message: comment ? `Deleted commnent ${req.params.id} of question ${comment.id}` : "Something wrong, try again" }
+        const result = { message: comment ? `Deleted commnent ${req.params.id} of question ${comment.questionId}` : "Something wrong, try again" }
         res.send(result);
     } catch (error) {
         res.status(500).send(error.message);

@@ -22,8 +22,7 @@ async function addQuestion(req, res) {
             include: {
                 User: {
                     select: {
-                        displayName: true,
-                        reputation: true
+                        displayName: true
                     }
                 }
             }
@@ -64,7 +63,6 @@ async function findQuestions(req, res) {
                     select: {
                         uid: true,
                         displayName: true,
-                        reputation: true,
                         photoURL: true
                     }
                 },
@@ -195,9 +193,18 @@ async function updateQuestionById(req, res) {
                         data: await getTagIdsByTagNames(req.body.tags)
                     }
                 }
+            },
+            include: {
+                User: {
+                    select: {
+                        displayName: true
+                    }
+                }
             }
         });
 
+        const facebookComment = await facebookApi.updatePost(question, req.body.tags);
+        console.log(facebookComment);
         res.send(question);
     } catch (error) {
         res.status(500).send(error.message);

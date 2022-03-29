@@ -4,7 +4,7 @@ const { URL } = require('url');
 const MY_URL = new URL('https://graph.facebook.com');
 MY_URL.search = `?access_token=${process.env.FACEBOOK_LONG_LIVED_TOKEN}`;
 
-module.exports = { addPost, deletePost };
+module.exports = { addPost, updatePost, deletePost };
 
 async function addPost(question, tags) {
     try {
@@ -18,6 +18,17 @@ async function addPost(question, tags) {
     }
 }
 
+async function updatePost(question, tags) {
+    try {
+        MY_URL.pathname = `/v13.0/${question.facebookId}`;
+
+        const message = generateMessage(question, tags);
+        const response = await axios.post(MY_URL.toString(), { message });
+        return response.data;
+    } catch (error) {
+        return error;
+    }
+}
 
 async function deletePost(postId) {
     try {
@@ -30,9 +41,8 @@ async function deletePost(postId) {
 }
 
 function generateMessage(question, tags) {
-    const reputations = question.User.reputation;
     let message = "";
-    message += `FROM: ${question.User.displayName} [${reputations} ${reputations == 0 ? 'reputation' : 'reputaions'}]`;
+    message += `FROM: ${question.User.displayName}`;
     message += `\n\n`;
     message += `Q: ${question.title}\n`;
     message += `${question.content}`
