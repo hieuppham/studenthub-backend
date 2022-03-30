@@ -31,6 +31,7 @@ CREATE TABLE `Question` (
 	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	FULLTEXT (`title`, `content`),
 	PRIMARY KEY(`id`)
 );
@@ -44,9 +45,9 @@ CREATE TABLE `Answer` (
 	`score` int NOT NULL DEFAULT 0,
 	`deleted` BOOLEAN NOT NULL DEFAULT FALSE, -- FALSE for not deleted, TRUE for soft deleted 
 	`verify` BOOLEAN NOT NULL DEFAULT FALSE,
-	`createdAt`
-                DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `QuestionVoter`;
@@ -79,6 +80,7 @@ CREATE TABLE `QuestionComment` (
 	`content` TEXT NOT NULL,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `AnswerComment`;
@@ -89,6 +91,7 @@ CREATE TABLE `AnswerComment` (
 	`content` TEXT NOT NULL,
 	`createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+	`facebookId` VARCHAR(31) UNIQUE,
 	PRIMARY KEY (`id`)
 );
 DROP TABLE IF EXISTS `TagsOnQuestions`;
@@ -112,13 +115,13 @@ CREATE TABLE `Document` (
 );
 
 --- Set to anonymous
--- ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `Question` ADD CONSTRAINT `Question_fk0` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
--- ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `Answer` ADD CONSTRAINT `Answer_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 
--- ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
+ALTER TABLE `QuestionComment` ADD CONSTRAINT `QuestionComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`) ;
 
--- ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
+ALTER TABLE `AnswerComment` ADD CONSTRAINT `AnswerComment_fk1` FOREIGN KEY (`userId`) REFERENCES `User`(`uid`);
 --- end set to anonymous
 
 --- delete Interested tag and revoke votes
@@ -154,8 +157,8 @@ ALTER TABLE `TagsOnUsers` ADD CONSTRAINT `TagsOnUsers_fk0` FOREIGN KEY (`tagId`)
 SELECT Concat('DROP TRIGGER IF EXISTS ', Trigger_Name, ';') FROM  information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'student_hub';
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_insert_qs_voter;
-
-          
+drop TRIGGER IF EXISTS update_reputation_after_verify_answer;
+DROP TRIGGER IF EXISTS           
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_update_qs_voter;
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_delete_qs_voter;
@@ -340,6 +343,7 @@ END;
 ---- END TRIGGER ON `AnswerVoter`
 
 ---- TRIGGER ON `Answer`
+
 CREATE TRIGGER `update_reputation_after_verify_answer` AFTER UPDATE ON `Answer`
 FOR EACH ROW
 BEGIN
@@ -347,14 +351,14 @@ BEGIN
 		BEGIN
 			UPDATE `User` SET `reputation` = `reputation` + 15 WHERE `uid` = NEW.`userId`;
 			UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
-				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
+				SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
 			);
 		END;
 	ELSEIF NEW.`verify` = FALSE THEN
 		BEGIN
 			UPDATE `User` SET `reputation` = `reputation` - 15 WHERE `uid` = NEW.`userId`;
 			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
-				SELECT `userId` FROM `Question` WHERE `questionId` = NEW.`questionId`
+				SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
 			);
 		END;
 	END IF;

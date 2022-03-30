@@ -12,12 +12,12 @@
     "author": "Group 2 Web Technologies",
     "license": "ISC",
     "dependencies": {
-        "@prisma/client": "^3.10.0",
+        "@prisma/client": "^3.11.1",
+        "axios": "^0.26.1",
         "cors": "^2.8.5",
         "express": "^4.17.3",
         "firebase-admin": "^10.0.2",
         "mysql2": "^2.3.3",
-        "prisma": "^3.10.0",
         "swagger-ui-express": "^4.3.0"
     },
     "devDependencies": {
@@ -25,6 +25,7 @@
         "chai-http": "^4.3.0",
         "mocha": "^9.2.1",
         "morgan": "^1.10.0",
-        "nodemon": "^2.0.15"
+        "nodemon": "^2.0.15",
+        "prisma": "^3.11.1"
     }
 }

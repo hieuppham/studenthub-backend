@@ -5,12 +5,12 @@ module.exports = { updateQuestionScoreById }
 
 async function updateQuestionScoreById(req, res) {
     try {
-        const questionId = Number(req.params.id)
-        const userId = req.body.userId
-        const state = req.body.state
+        const questionId = Number(req.params.id);
+        const userId = req.body.userId;
+        const state = req.body.state;
 
-        const question = await prisma.questionVoter.findFirst({ where: { userId: userId, questionId: questionId } })
-        const questionVoterId = question ? question.id : -1
+        const question = await prisma.questionVoter.findFirst({ where: { userId: userId, questionId: questionId } });
+        const questionVoterId = question ? question.id : -1;
 
         const questionVoter = await prisma.questionVoter.upsert({
             where: {
@@ -24,10 +24,10 @@ async function updateQuestionScoreById(req, res) {
             update: {
                 state: state
             }
-        })
+        });
 
-        res.send(questionVoter)
+        res.send(questionVoter);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }

@@ -11,17 +11,17 @@ function getUid(req, res, next) {
 
 const authQueue = [getUid, authorize];
 
-router.get("/", findQuestions)
-router.get("/:id", findQuestionById)
+router.get("/", findQuestions);
+router.get("/:id", findQuestionById);
 
-router.post("/", authQueue, addQuestion)
-router.put("/:id", authQueue, updateQuestionById)
-router.delete("/:id", authQueue, deleteQuesionById)
+router.post("/", authQueue, addQuestion);
+router.put("/:id", authQueue, updateQuestionById);
+router.delete("/:id", authQueue, deleteQuesionById);
 
-router.put("/score/:id", authQueue, updateQuestionScoreById)
+router.put("/score/:id", authQueue, updateQuestionScoreById);
 
-router.post("/comments", authQueue, addQuestionComment)
-router.put("/comments/:id", authQueue, updateQuestionCommentById)
-router.delete("/comments/:id", authQueue, deleteQuestionCommentById)
+router.post("/comments", authQueue, addQuestionComment);
+router.put("/comments/:id", authQueue, updateQuestionCommentById);
+router.delete("/comments/:id", authQueue, deleteQuestionCommentById);
 
-module.exports = router
+module.exports = router;

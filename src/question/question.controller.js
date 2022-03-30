@@ -1,13 +1,13 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+const facebookApi = require('../utils/facebook-post.api');
 
 module.exports = { addQuestion, findQuestions, findQuestionById, updateQuestionById, deleteQuesionById, getTagIdsByTagNames }
 
-const QUESTIONS_PER_PAGE = 15
+const QUESTIONS_PER_PAGE = 15;
 
 async function addQuestion(req, res) {
     try {
-
         const question = await prisma.question.create({
             data: {
                 userId: req.body.userId,
@@ -17,12 +17,28 @@ async function addQuestion(req, res) {
                     createMany: {
                         data: await getTagIdsByTagNames(req.body.tags)
                     }
+                },
+            },
+            include: {
+                User: {
+                    select: {
+                        displayName: true
+                    }
                 }
             }
-        })
-        res.status(201).send(question)
+        });
+
+        const facebookPost = await facebookApi.addPost(question, req.body.tags);
+        await prisma.question.update({
+            where: { id: question.id },
+            data: { facebookId: facebookPost.id }
+        });
+
+        res.status(201).send(question);
+
+
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -47,7 +63,7 @@ async function findQuestions(req, res) {
                     select: {
                         uid: true,
                         displayName: true,
-                        reputation: true
+                        photoURL: true
                     }
                 },
                 _count: {
@@ -108,7 +124,8 @@ async function findQuestionById(req, res) {
                                 User: {
                                     select: {
                                         uid: true,
-                                        displayName: true
+                                        displayName: true,
+                                        photoURL: true
                                     }
                                 }
                             },
@@ -150,16 +167,19 @@ async function findQuestionById(req, res) {
                     }
                 }
             }
-        })
-        res.send(question)
+        });
+        question[0].facebookLink =
+            `${process.env.FACEBOOK_PAGE_POST_BASE_URL}/${question[0].facebookId.substring(question[0].facebookId.indexOf("_") + 1)}`
+        res.send(question[0]);
+
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
 async function updateQuestionById(req, res) {
     try {
-        const id = Number(req.params.id)
+        const id = Number(req.params.id);
 
         const question = await prisma.question.update({
             where: {
@@ -176,12 +196,21 @@ async function updateQuestionById(req, res) {
                         data: await getTagIdsByTagNames(req.body.tags)
                     }
                 }
+            },
+            include: {
+                User: {
+                    select: {
+                        displayName: true
+                    }
+                }
             }
-        })
+        });
 
-        res.send(question)
+        const facebookComment = await facebookApi.updatePost(question, req.body.tags);
+        console.log(facebookComment);
+        res.send(question);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -194,8 +223,13 @@ async function deleteQuesionById(req, res) {
             data: {
                 deleted: true
             }
-        })
+        });
+
+        await facebookApi.deletePost(question.facebookId);
+
         res.send({ message: question ? "Deleted question " + question.id : "Something wrong, try again." });
+
+
     } catch (error) {
         res.status(500).send(error.message)
     }

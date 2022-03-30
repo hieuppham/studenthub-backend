@@ -17,7 +17,8 @@ async function createOrUpdateUser(req, res) {
             return res.status(401).send({ message: "Missing token" });
 
         } else {
-            const decodedToken = await auth().verifyIdToken(idToken.split(' ')[1]);
+            const decodedToken = await auth().verifyIdToken(idToken.substr(6));
+
             const decodedUid = decodedToken.uid;
             const UserRecord = await auth().getUser(decodedUid);
 
@@ -37,6 +38,7 @@ async function createOrUpdateUser(req, res) {
                     photoURL: UserRecord.photoURL
                 }
             });
+
             res.status(201).send({ message: "User updated", user });
         }
     } catch (error) {
@@ -51,7 +53,7 @@ async function authorize(req, res, next) {
             return res.status(401).send({ message: "Missing token" });
 
         } else {
-            const decodedToken = await auth().verifyIdToken(idToken.split(' ')[1]);
+            const decodedToken = await auth().verifyIdToken(idToken.substr(6));
             const expTime = new Date(decodedToken.exp * 1000);
 
             if (expTime < new Date()) {
