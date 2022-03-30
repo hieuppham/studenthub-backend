@@ -43,6 +43,11 @@ async function deleteComment(commentId) {
 
 function generateComment(comment) {
     let message = "";
+    if (comment.verify == true) {
+        message += "✅ ";
+    } else {
+        message = message.substring(message.indexOf("FROM"));
+    }
     message += `FROM: ${comment.User.displayName}`;
     message += `\n\n`;
     message += `${comment.content}`;

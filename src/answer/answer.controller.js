@@ -95,8 +95,18 @@ async function verifyAnswer(req, res) {
             },
             data: {
                 verify: req.body.verify
+            },
+            include: {
+                User: {
+                    select: {
+                        displayName: true
+                    }
+                }
             }
         });
+
+        await facebookApi.updateComment(answer);
+
         res.send(answer);
     } catch (error) {
         res.status(500).send(error.message);

@@ -1,8 +1,8 @@
 const axios = require('axios');
 const { URL } = require('url');
 
-const MY_URL = new URL('https://graph.facebook.com');
-MY_URL.search = `?access_token=${process.env.FACEBOOK_LONG_LIVED_TOKEN}`;
+const MY_URL = new URL(process.env.FACEBOOK_GRAPH_API);
+MY_URL.searchParams.append("access_token", process.env.FACEBOOK_LONG_LIVED_TOKEN);
 
 module.exports = { addPost, updatePost, deletePost };
 

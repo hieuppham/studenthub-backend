@@ -167,8 +167,11 @@ async function findQuestionById(req, res) {
                     }
                 }
             }
-        })
-        res.send(question)
+        });
+        question[0].facebookLink =
+            `${process.env.FACEBOOK_PAGE_POST_BASE_URL}/${question[0].facebookId.substring(question[0].facebookId.indexOf("_") + 1)}`
+        res.send(question[0]);
+
     } catch (error) {
         res.status(500).send(error.message);
     }
