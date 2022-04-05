@@ -56,7 +56,8 @@ CREATE TABLE `QuestionVoter` (
 	`questionId` int NOT NULL,
 	`userId` varchar(255) NOT NULL,
 	`state` int NOT NULL DEFAULT 0,
-	PRIMARY KEY (`id`)
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `questionId_userID` (`questionId`, `userId`)
 );
 DROP TABLE IF EXISTS `AnswerVoter`;
 CREATE TABLE `AnswerVoter` (
@@ -64,7 +65,8 @@ CREATE TABLE `AnswerVoter` (
 	`userId` varchar(255) NOT NULL,
 	`answerId` int NOT NULL,
 	`state` int NOT NULL DEFAULT 0,
-	PRIMARY KEY (`id`)
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `answerId_userId` (`answerId`, `userId`)
 );
 DROP TABLE IF EXISTS `Tag`;
 CREATE TABLE `Tag` (
@@ -158,7 +160,7 @@ SELECT Concat('DROP TRIGGER IF EXISTS ', Trigger_Name, ';') FROM  information_sc
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_insert_qs_voter;
 drop TRIGGER IF EXISTS update_reputation_after_verify_answer;
-DROP TRIGGER IF EXISTS           
+
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_update_qs_voter;
 
 DROP TRIGGER IF EXISTS update_qs_score_and_reputation_after_delete_qs_voter;
@@ -196,7 +198,7 @@ BEGIN
 	UPDATE `Question` SET `score` = (
 		SELECT SUM(`state`) FROM `QuestionVoter` WHERE `questionId` = NEW.`questionId`) WHERE `id` = NEW.`questionId`; 
 
-	IF NEW.`state` = 1 THEN 
+	IF NEW.`state` = 1 AND OLD.state != 1 THEN 
 		BEGIN
 			IF OLD.`state` = 0 THEN
 				UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
@@ -208,7 +210,7 @@ BEGIN
 				);
 			END IF;
 		END;
-	ELSEIF NEW.`state` = 0 THEN
+	ELSEIF NEW.`state` = 0 AND OLD.state != 0 THEN
 		BEGIN
 			IF OLD.`state` = 1 THEN
 				UPDATE `User` SET `reputation` = `reputation` - 10 WHERE `uid` = (
@@ -220,7 +222,7 @@ BEGIN
 				);
 			END IF;
 		END;
-	ELSEIF NEW.`state` = -1 THEN
+	ELSEIF NEW.`state` = -1 AND OLD.state != -1 THEN
 		BEGIN
 			IF OLD.`state` = 0 THEN
 				UPDATE `User` SET `reputation` = `reputation` -2 WHERE `uid` = (
@@ -270,9 +272,12 @@ BEGIN
 			SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
 		);
 	ELSEIF NEW.`state` = -1 THEN
-		UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
-			SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
-		);
+		BEGIN
+			UPDATE User SET reputation = reputation - 1 WHERE uid = NEW.userId;
+			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
+				SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+			);
+		END;
 	END IF;	
 END;
 
@@ -282,31 +287,39 @@ BEGIN
 	UPDATE `Answer` SET `score` = (
 		SELECT SUM(`state`) FROM `AnswerVoter` WHERE `answerId` = NEW.`answerId`) WHERE `id` = NEW.`answerId`;
 
-	IF NEW.`state` = 1 THEN 
+	IF NEW.`state` = 1 AND OLD.state != 1 THEN 
 		BEGIN
 			IF OLD.`state` = -1 THEN
-				UPDATE `User` SET `reputation` = `reputation` + 2 + 10 WHERE `uid` = (
-					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
-				);
+				BEGIN
+					UPDATE User SET reputation = reputation + 1 WHERE uid = NEW.userId;
+					
+					UPDATE `User` SET `reputation` = `reputation` + 2 + 10 WHERE `uid` = (
+						SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+					);
+				END;
 			ELSEIF OLD.`state` = 0 THEN
 				UPDATE `User` SET `reputation` = `reputation` + 10 WHERE `uid` = (
 					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
 				);
 			END IF;
 		END;
-	ELSEIF NEW.`state` = 0 THEN
+	ELSEIF NEW.`state` = 0 AND OLD.state != 0 THEN
 		BEGIN
 			IF OLD.`state` = -1 THEN
-				UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
-					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
-				);
+				BEGIN
+					UPDATE User SET reputation = reputation + 1 WHERE uid = NEW.userId;
+
+					UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+						SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
+					);
+				END;
 			ELSEIF OLD.`state` = 1 THEN
 				UPDATE `User` SET `reputation` = `reputation` - 10 WHERE `uid` = (
 					SELECT `userId` FROM `Answer` WHERE `id` = NEW.`answerId`
 				);
 			END IF;
 		END;
-	ELSEIF NEW.`state` = -1 THEN
+	ELSEIF NEW.`state` = -1 AND OLD.state != -1 THEN
 		BEGIN
 			IF OLD.`state` = 0 THEN
 				UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
@@ -318,6 +331,8 @@ BEGIN
 				);
 			END IF;
 		END;
+
+		UPDATE User SET reputation = reputation -1 WHERE uid = NEW.userId;
 	END IF;	
 END;
 
@@ -333,9 +348,12 @@ BEGIN
 			SELECT `userId` FROM `Answer` WHERE `id` = OLD.`answerId`
 		);
 	ELSEIF OLD.`state` = -1 THEN
-		UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
-			SELECT `userId` FROM `Answer` WHERE `id` = OLD.`answerId`
-		);
+		BEGIN
+			UPDATE User SET reputation = reputation + 1 WHERE uid = OLD.userId;
+			UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
+				SELECT `userId` FROM `Answer` WHERE `id` = OLD.`answerId`
+			);
+		END;
 	END IF;	
 END;
 --- END ONLY HAPPEN WHEN DROP A USER (REVOKE VOTE)
@@ -347,14 +365,14 @@ END;
 CREATE TRIGGER `update_reputation_after_verify_answer` AFTER UPDATE ON `Answer`
 FOR EACH ROW
 BEGIN
-	IF NEW.`verify` = TRUE THEN
+	IF NEW.`verify` = TRUE AND OLD.verify = FALSE THEN
 		BEGIN
 			UPDATE `User` SET `reputation` = `reputation` + 15 WHERE `uid` = NEW.`userId`;
 			UPDATE `User` SET `reputation` = `reputation` + 2 WHERE `uid` = (
 				SELECT `userId` FROM `Question` WHERE `id` = NEW.`questionId`
 			);
 		END;
-	ELSEIF NEW.`verify` = FALSE THEN
+	ELSEIF NEW.`verify` = FALSE AND OLD.verify = TRUE THEN
 		BEGIN
 			UPDATE `User` SET `reputation` = `reputation` - 15 WHERE `uid` = NEW.`userId`;
 			UPDATE `User` SET `reputation` = `reputation` - 2 WHERE `uid` = (
