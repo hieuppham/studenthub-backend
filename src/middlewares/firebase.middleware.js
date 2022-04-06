@@ -55,10 +55,11 @@ async function authorize(req, res, next) {
         } else {
             const decodedToken = await auth().verifyIdToken(idToken.substr(6));
             const expTime = new Date(decodedToken.exp * 1000);
-
+            console.log(decodedToken);
             if (expTime < new Date()) {
                 return res.status(401).send({ message: "Token expired" });
             } else {
+                res.locals.uid = decodedToken.uid;
                 const uid = res.locals.uid;
                 const existUser = await prisma.user.findUnique({ where: { uid: uid } });
 
