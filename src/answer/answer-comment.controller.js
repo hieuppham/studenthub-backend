@@ -8,7 +8,7 @@ async function addAnswerComment(req, res) {
         const comment = await prisma.answerComment.create({
             data: {
                 answerId: req.body.answerId,
-                userId: req.body.userId,
+                userId: res.locals.uid,
                 content: req.body.content
             },
             include: {

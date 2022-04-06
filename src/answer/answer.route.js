@@ -18,7 +18,7 @@ router.put("/verify/:id", authQueue, verifyAnswer);
 
 router.put("/score/:id", authQueue, updateAnswerScoreById);
 
-router.post("/comments", authQueue, addAnswerComment);
+router.post("/comments", authorize, addAnswerComment);
 router.put("/comments/:id", authQueue, updateAnswerCommentById);
 router.delete("/comments/:id", authQueue, deleteAnswerCommentById);
 

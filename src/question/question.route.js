@@ -20,7 +20,7 @@ router.delete("/:id", authQueue, deleteQuesionById);
 
 router.put("/score/:id", authQueue, updateQuestionScoreById);
 
-router.post("/comments", authQueue, addQuestionComment);
+router.post("/comments", authorize, addQuestionComment);
 router.put("/comments/:id", authQueue, updateQuestionCommentById);
 router.delete("/comments/:id", authQueue, deleteQuestionCommentById);
 
