@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const facebookApi = require('../utils/facebook-comment.api');
 
-module.exports = { addQuestionComment, updateQuestionCommentById, deleteQuestionCommentById }
+module.exports = { addQuestionComment, updateQuestionCommentById, deleteQuestionCommentById };
 
 async function addQuestionComment(req, res) {
     try {
@@ -15,6 +15,7 @@ async function addQuestionComment(req, res) {
             include: {
                 User: {
                     select: {
+                        uid: true,
                         displayName: true
                     }
                 },
@@ -38,7 +39,7 @@ async function addQuestionComment(req, res) {
 
         res.status(201).send(comment);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -64,7 +65,7 @@ async function updateQuestionCommentById(req, res) {
 
         res.send(comment);
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -78,7 +79,11 @@ async function deleteQuestionCommentById(req, res) {
 
         await facebookApi.deleteComment(comment.facebookId);
 
-        const result = { message: comment ? `Deleted commnent ${req.params.id} of question ${comment.questionId}` : "Something wrong, try again" }
+        const result = {
+            message: comment
+                ? `Deleted commnent ${req.params.id} of question ${comment.questionId}`
+                : 'Something wrong, try again'
+        };
         res.send(result);
     } catch (error) {
         res.status(500).send(error.message);
