@@ -17,7 +17,7 @@ async function createOrUpdateUser(req, res) {
             return res.status(401).send({ message: "Missing token" });
 
         } else {
-            const decodedToken = await auth().verifyIdToken(idToken.substr(7));
+            const decodedToken = await auth().verifyIdToken(idToken.substring(7));
 
             const decodedUid = decodedToken.uid;
             const UserRecord = await auth().getUser(decodedUid);
@@ -53,7 +53,7 @@ async function authorize(req, res, next) {
             return res.status(401).send({ message: "Missing token" });
 
         } else {
-            const decodedToken = await auth().verifyIdToken(idToken.substr(6));
+            const decodedToken = await auth().verifyIdToken(idToken.substring(7));
             const expTime = new Date(decodedToken.exp * 1000);
             console.log(decodedToken);
             if (expTime < new Date()) {
